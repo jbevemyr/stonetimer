@@ -1,51 +1,103 @@
-# RockTimer Apple Watch App
+# RockTimer – iOS & watchOS App
 
-Apple Watch app for displaying curling times and arming the timing system.
+SwiftUI-app för att visa och styra RockTimer från iPhone och Apple Watch.
 
-## Building the app
+## Struktur
 
-### Requirements
-- macOS med Xcode 15+
-- Apple Developer account (to run on a physical watch)
+```
+apple-watch/
+  Shared/
+    Models/
+      RockTimerModels.swift     – Gemensamma modeller (SystemState, TimerState m.m.)
+    Networking/
+      RockTimerClient.swift     – REST + WebSocket-klient
+  RockTimerIOS/
+    RockTimerIOSApp.swift       – App entry point
+    ContentView.swift           – Portrait + Landscape views
+  RockTimerWatch/
+    RockTimerWatchApp.swift     – Watch App entry point
+    WatchContentView.swift      – Tider + kontroller
+```
 
-### Steps
+## Skapa Xcode-projekt
 
-1. Open `RockTimer.xcodeproj` in Xcode
+1. Öppna Xcode → **File → New → Project**
+2. Välj **iOS → App**
+   - Product Name: `RockTimer`
+   - Bundle ID: `com.yourname.rocktimer`
+   - Interface: SwiftUI
+   - Deployment Target: **iOS 26**
+3. Lägg till watchOS-target: **File → New → Target → watchOS → Watch App**
+   - Product Name: `RockTimerWatch`
+   - Deployment Target: **watchOS 11**
+   - Kryssa i "Include Notification Scene": nej
 
-2. Configure the server URL in `TimerViewModel.swift`:
-   ```swift
-   private let serverURL = "http://192.168.50.1:8080"
-   ```
+## Lägg till källfiler
 
-3. Select "RockTimer WatchKit App" as the target
+Drag-och-släpp filerna till rätt targets i Xcode:
 
-4. Run on the simulator or a physical Apple Watch
+| Fil | Target |
+|-----|--------|
+| `Shared/Models/RockTimerModels.swift` | iOS + watchOS |
+| `Shared/Networking/RockTimerClient.swift` | iOS + watchOS |
+| `RockTimerIOS/RockTimerIOSApp.swift` | iOS |
+| `RockTimerIOS/ContentView.swift` | iOS |
+| `RockTimerWatch/RockTimerWatchApp.swift` | watchOS |
+| `RockTimerWatch/WatchContentView.swift` | watchOS |
 
-## Features
+> Välj båda targets för Shared-filerna (kryssa i checkboxarna i "Target Membership").
 
-- **Display times**: Total time, Tee→Hog, Hog→Hog
-- **Arm system**: Start a new measurement
-- **Cancel**: Cancel the current measurement
-- **Haptic feedback**: Vibrate on new times
+## Orientering (iOS)
 
-## Network configuration
+I Xcode → Targets → RockTimer → General → Device Orientation:
+- ✅ Portrait
+- ✅ Landscape Left
+- ✅ Landscape Right
 
-Apple Watch communicates via the paired iPhone when it is not on the same Wi‑Fi.
-For best results, ensure the iPhone is connected to the same Wi‑Fi (192.168.50.x).
+## Info.plist – tillåt HTTP
 
-### Optional: WatchConnectivity
+Lägg till i iOS targets `Info.plist`:
 
-For a more robust solution, the app can be modified to use WatchConnectivity
-to communicate via the paired iPhone. This requires a companion iOS app.
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <true/>
+</dict>
+```
 
-## Troubleshooting
+Eller mer specifikt:
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSExceptionDomains</key>
+    <dict>
+        <key>192.168.50.1</key>
+        <dict>
+            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+            <true/>
+        </dict>
+    </dict>
+</dict>
+```
 
-### The app can't connect
-1. Check that the Pi 4 is running and reachable
-2. Verify that the iPhone is on the same Wi‑Fi network
-3. Try opening `http://192.168.50.1:8080` in Safari on the iPhone
+## Byt server-IP
 
-### Times do not update
-- The app polls the server every second
-- Check network connectivity
+Om Pi:n har annan IP, ändra i `RockTimerIOSApp.swift`:
 
+```swift
+_client = StateObject(wrappedValue: RockTimerClient(state: s, serverBase: "http://192.168.50.1:8080"))
+```
+
+## Funktioner
+
+### iOS
+- **Portrait**: tidskort staplade + Rearm-knapp + historik
+- **Landscape**: tidskort + Rearm till vänster, historik till höger
+- **WebSocket** för realtidsuppdateringar
+- Timglas-logotyp i rosa/orange
+
+### watchOS
+- Tider-tab + Kontroll-tab (carousel)
+- **Polling** var 1.5s (WebSocket stöds inte fullt ut på watchOS)
+- Haptic feedback vid Rearm/Cancel

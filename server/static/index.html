@@ -22,32 +22,11 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #f5f5f7;
-            color: #1d1d1f;
+            background: #000000;
+            color: #f2f2f2;
             padding: 10px;
             display: flex;
             flex-direction: column;
-        }
-
-        /* Dark mode */
-        @media (prefers-color-scheme: dark) {
-            body { background: #0f1115; color: #f5f5f7; }
-            header h1 { color: #f5f5f7; }
-            .status-dot { background: #5c5c62; }
-            .sensor-dot { background: #2a2a2f; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.08); }
-            .divider-line { background: #2a2a2f; }
-            .divider-handle { background: #1e2026; color: #c7c7cc; }
-            .btn-toggle { background: #1e2026; color: #c7c7cc; }
-            .btn-toggle:hover { color: #f5f5f7; }
-            .history-table th { color: #c7c7cc; border-bottom: 2px solid #2a2a2f; background: #000000; }
-            .history-table td { border-bottom: 1px solid #1e2026; }
-            .history-table .time-col { color: #c7c7cc; }
-            .empty-history { color: #c7c7cc; }
-            .modal { background: #141821; }
-            .setting-note { color: #a1a1aa; }
-            .btn-secondary { background: #1e2026; border-color: #2a2a2f; color: #f5f5f7; }
-            .time-card.tee-hog { background: linear-gradient(135deg, #3e56c7 0%, #2f44b8 100%); }
-            .time-card.hog-hog { background: linear-gradient(135deg, #7b3fc2 0%, #6423a7 100%); }
         }
 
         .container {
@@ -69,14 +48,50 @@
             flex-shrink: 0;
         }
 
-        .logo { font-size: 1.5rem; }
-        h1 { font-size: 1.2rem; font-weight: 600; }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.2px;
+        }
+
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+
+        .logo-icon::before,
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        .logo-icon::before {
+            top: 0;
+            border-radius: 0 0 999px 999px;
+            background: #ff5fa2;
+        }
+
+        .logo-icon::after {
+            bottom: 0;
+            border-radius: 999px 999px 0 0;
+            background: #ffb347;
+        }
+
+        .logo-text { font-weight: 700; }
 
         .status-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #86868b;
+            background: #4b4b52;
         }
         .status-dot.armed { background: #34c759; animation: pulse 1.5s infinite; }
         .status-dot.measuring { background: #007aff; animation: pulse 0.5s infinite; }
@@ -98,8 +113,8 @@
             width: 12px;
             height: 12px;
             border-radius: 50%;
-            background: #d2d2d7; /* unknown */
-            box-shadow: inset 0 0 0 2px rgba(0,0,0,0.08);
+            background: #1c1c1f; /* unknown */
+            box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12);
         }
         .sensor-dot.online { background: #34c759; }
         .sensor-dot.offline { background: #ff3b30; }
@@ -138,11 +153,11 @@
         }
 
         .time-card.tee-hog {
-            background: linear-gradient(135deg, #5a7dfe 0%, #4a6cf5 100%);
+            background: linear-gradient(135deg, #ff5fa2 0%, #ff8ac4 100%);
         }
 
         .time-card.hog-hog {
-            background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+            background: linear-gradient(135deg, #ff9f2e 0%, #ffc266 100%);
         }
 
         .time-label {
@@ -177,8 +192,6 @@
         @media (max-width: 600px) {
             body {
                 padding: 8px;
-                background: #000000;
-                color: #f2f2f2;
             }
 
             header {
@@ -235,18 +248,8 @@
                 height: 20px;
             }
 
-            .status-dot { background: #4b4b52; }
-            .sensor-dot { background: #1c1c1f; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.12); }
-            .divider-line { background: #1c1c1f; }
-            .divider-handle { background: #121215; color: #cfcfd6; }
-            .btn-toggle { background: #121215; color: #cfcfd6; }
-            .btn-toggle:hover { color: #f2f2f2; }
-            .history-table th { color: #cfcfd6; border-bottom: 2px solid #1c1c1f; background: #000000; }
-            .history-table td { border-bottom: 1px solid #121215; }
-            .history-table .time-col { color: #cfcfd6; }
-            .empty-history { color: #cfcfd6; }
-            .time-card.tee-hog { background: linear-gradient(135deg, #405ee0 0%, #2e44b8 100%); }
-            .time-card.hog-hog { background: linear-gradient(135deg, #8a4ae6 0%, #6b28cf 100%); }
+            .time-card.tee-hog { background: linear-gradient(135deg, #ff5fa2 0%, #ff8ac4 100%); }
+            .time-card.hog-hog { background: linear-gradient(135deg, #ff9f2e 0%, #ffc266 100%); }
         }
 
         /* Rearm button */
@@ -255,7 +258,7 @@
             min-width: 80px;
             border: none;
             border-radius: 14px;
-            background: linear-gradient(135deg, #34c759 0%, #30b350 100%);
+            background: linear-gradient(135deg, #22c1c3 0%, #2ecc71 100%);
             color: white;
             font-family: inherit;
             font-size: 0.85rem;
@@ -273,12 +276,15 @@
         .btn-rearm:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-rearm svg { width: 24px; height: 24px; }
 
-        /* Mobile: make Rearm full width under cards */
+        /* Mobile: make Rearm full width under cards, hide toggle */
         @media (max-width: 600px) {
             .btn-rearm {
                 width: 100%;
                 min-width: 0;
                 align-self: stretch;
+            }
+            .btn-toggle {
+                display: none;
             }
         }
 
@@ -297,7 +303,7 @@
         .divider-line {
             flex: 1;
             height: 2px;
-            background: #d2d2d7;
+            background: #1c1c1f;
             border-radius: 1px;
         }
 
@@ -306,10 +312,10 @@
             align-items: center;
             gap: 6px;
             padding: 4px 10px;
-            background: #e5e5e7;
+            background: #121215;
             border-radius: 12px;
             font-size: 0.8rem;
-            color: #86868b;
+            color: #cfcfd6;
             font-weight: 500;
         }
 
@@ -319,12 +325,12 @@
         }
 
         .btn-toggle {
-            background: #e5e5e7;
+            background: #121215;
             border: none;
             padding: 6px 10px;
             border-radius: 8px;
             cursor: pointer;
-            color: #86868b;
+            color: #cfcfd6;
             display: flex;
             align-items: center;
             font-family: inherit;
@@ -334,7 +340,7 @@
             transition: color 0.2s;
         }
 
-        .btn-toggle:hover { color: #1d1d1f; }
+        .btn-toggle:hover { color: #f2f2f2; }
         .btn-toggle:active { transform: scale(0.95); }
         .btn-toggle svg { width: 14px; height: 14px; }
 
@@ -388,35 +394,35 @@
             text-align: left;
             padding: 8px 6px;
             font-weight: 600;
-            color: #86868b;
-            border-bottom: 2px solid #d2d2d7;
+            color: #cfcfd6;
+            border-bottom: 2px solid #1c1c1f;
             font-size: 0.95rem;
             position: sticky;
             top: 0;
-            background: #f5f5f7;
+            background: #000000;
         }
 
         .history-table td {
             padding: 10px 6px;
-            border-bottom: 1px solid #e5e5e7;
+            border-bottom: 1px solid #121215;
         }
 
         .history-table tr:last-child td { border-bottom: none; }
 
         .history-table .time-col {
-            color: #86868b;
+            color: #cfcfd6;
             font-size: 1rem;
         }
 
         .history-table .tee-hog-col {
-            color: #5a7dfe;
+            color: #ff7ab8;
             font-weight: 700;
             font-size: 1.2rem;
             font-family: 'SF Mono', 'Menlo', monospace;
         }
 
         .history-table .hog-hog-col {
-            color: #9333ea;
+            color: #ffb347;
             font-weight: 700;
             font-size: 1.2rem;
             font-family: 'SF Mono', 'Menlo', monospace;
@@ -425,20 +431,8 @@
         .empty-history {
             text-align: center;
             padding: 20px;
-            color: #86868b;
+            color: #cfcfd6;
             font-size: 1rem;
-        }
-
-        /* Mobile history colors (override base header background) */
-        @media (max-width: 600px) {
-            .history-table th {
-                color: #cfcfd6;
-                border-bottom: 2px solid #1c1c1f;
-                background: #000000;
-            }
-            .history-table td { border-bottom: 1px solid #121215; }
-            .history-table .time-col { color: #cfcfd6; }
-            .empty-history { color: #cfcfd6; }
         }
 
         /* Settings button */
@@ -447,12 +441,12 @@
             border: none;
             padding: 4px;
             cursor: pointer;
-            color: #86868b;
+            color: #cfcfd6;
             display: flex;
             align-items: center;
             margin-left: 8px;
         }
-        .btn-settings:hover { color: #1d1d1f; }
+        .btn-settings:hover { color: #f2f2f2; }
         .btn-settings svg { width: 20px; height: 20px; }
 
         /* Modal */
@@ -471,7 +465,7 @@
         .modal-overlay.open { display: flex; }
 
         .modal {
-            background: white;
+            background: #141821;
             border-radius: 16px;
             padding: 20px;
             width: 90%;
@@ -493,7 +487,7 @@
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: #86868b;
+            color: #cfcfd6;
             line-height: 1;
         }
 
@@ -513,12 +507,12 @@
         .setting-group input[type="checkbox"] {
             width: 20px;
             height: 20px;
-            accent-color: #5a7dfe;
+            accent-color: #ff5fa2;
         }
 
         .setting-subgroup {
             margin-left: 30px;
-            border-left: 2px solid #e5e5e7;
+            border-left: 2px solid #1c1c1f;
             padding-left: 12px;
         }
 
@@ -527,7 +521,7 @@
             padding: 12px;
             border: none;
             border-radius: 10px;
-            background: #5a7dfe;
+            background: linear-gradient(135deg, #ff5fa2 0%, #ff8ac4 100%);
             color: white;
             font-family: inherit;
             font-size: 1rem;
@@ -539,10 +533,10 @@
         .btn-secondary {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #e5e5e7;
+            border: 1px solid #1c1c1f;
             border-radius: 10px;
-            background: #f5f5f7;
-            color: #1d1d1f;
+            background: #121215;
+            color: #f2f2f2;
             font-family: inherit;
             font-size: 0.95rem;
             font-weight: 600;
@@ -553,7 +547,7 @@
         .btn-secondary:active { transform: scale(0.98); }
 
         .setting-note {
-            color: #86868b;
+            color: #a1a1aa;
             font-size: 0.85rem;
             line-height: 1.3;
             margin-top: 6px;
@@ -563,8 +557,10 @@
 <body>
     <div class="container">
         <header>
-            <span class="logo">🥌</span>
-            <h1>RockTimer</h1>
+            <div class="logo">
+                <span class="logo-icon" aria-hidden="true"></span>
+                <span class="logo-text">Rock Timer</span>
+            </div>
             <div class="sensor-dots" title="Sensor status">
                 <div class="sensor-dot" id="sensor-tee" title="Tee"></div>
                 <div class="sensor-dot" id="sensor-hog_far" title="Hog far"></div>

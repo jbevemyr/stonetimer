@@ -1,6 +1,6 @@
-# Contributing to SplitStone
+# Contributing to RockTimer
 
-Thank you for your interest in contributing to SplitStone! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing to RockTimer! This document provides guidelines for contributing to the project.
 
 ## Code of Conduct
 
@@ -24,7 +24,7 @@ Thank you for your interest in contributing to SplitStone! This document provide
 - Include steps to reproduce
 - Add logs if relevant:
   ```bash
-  sudo journalctl -u splitstone-server -n 100
+  sudo journalctl -u rocktimer-server -n 100
   ```
 - Specify hardware (Pi model, sensors, display)
 - Include config.yaml (remove sensitive data)
@@ -46,7 +46,7 @@ Steps to reproduce:
 Environment:
 - Pi Zero 2 W (Raspberry Pi OS Bookworm 64-bit)
 - Server: Pi 4 (192.168.50.1)
-- Network: Connected to splitstone Wi-Fi
+- Network: Connected to rocktimer Wi-Fi
 - Sensor logs: See attached
 ```
 
@@ -88,8 +88,8 @@ Implementation notes:
 ```bash
 # Fork the repo on GitHub
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/splitstone.git
-cd splitstone
+git clone https://github.com/YOUR_USERNAME/rocktimer.git
+cd rocktimer
 
 # Create a branch
 git checkout -b feature/your-feature-name
@@ -150,7 +150,7 @@ def calc(a, b):  # No docstring, unclear names
 1. **Test locally:**
    ```bash
    # Server
-   cd /opt/splitstone
+   cd /opt/rocktimer
    sudo venv/bin/python server/main.py
    
    # Simulate triggers
@@ -164,7 +164,7 @@ def calc(a, b):  # No docstring, unclear names
 
 3. **Check logs for errors:**
    ```bash
-   sudo journalctl -u splitstone-server -n 100 --no-pager
+   sudo journalctl -u rocktimer-server -n 100 --no-pager
    ```
 
 4. **Test edge cases:**
@@ -418,5 +418,5 @@ Open an issue or reach out to the maintainers.
 
 ---
 
-**Thank you for contributing to SplitStone!** 🥌
+**Thank you for contributing to RockTimer!** 🥌
 

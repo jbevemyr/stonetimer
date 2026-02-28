@@ -2,7 +2,7 @@ import SwiftUI
 import WatchKit
 
 struct WatchContentView: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
 
     var body: some View {
         TabView {
@@ -16,7 +16,7 @@ struct WatchContentView: View {
 // MARK: - Times View
 
 struct WatchTimesView: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
 
     var body: some View {
         VStack(spacing: 6) {
@@ -43,8 +43,8 @@ struct WatchTimesView: View {
 // MARK: - Control View
 
 struct WatchControlView: View {
-    @EnvironmentObject var state: SplitStoneState
-    @EnvironmentObject var client: SplitStoneClient
+    @EnvironmentObject var state: RockTimerState
+    @EnvironmentObject var client: RockTimerClient
 
     var body: some View {
         VStack(spacing: 12) {
@@ -121,6 +121,6 @@ struct WatchTimeBlock: View {
 
 #Preview {
     WatchContentView()
-        .environmentObject(SplitStoneState())
-        .environmentObject(SplitStoneClient(state: SplitStoneState(), usePolling: true))
+        .environmentObject(RockTimerState())
+        .environmentObject(RockTimerClient(state: RockTimerState(), usePolling: true))
 }

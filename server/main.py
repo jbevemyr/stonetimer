@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SplitStone Central Server
+RockTimer Central Server
 Runs on the Pi 4 at the near hog line.
 Collects timestamps, calculates times, and serves the web UI.
 """
@@ -47,7 +47,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger('splitstone-server')
+logger = logging.getLogger('rocktimer-server')
 
 
 class SystemState(str, Enum):
@@ -120,8 +120,8 @@ class TimingSession:
         }
 
 
-class SplitStoneServer:
-    """Main class for the SplitStone server.
+class RockTimerServer:
+    """Main class for the RockTimer server.
     
     Responsibilities:
     - Listen for UDP triggers from remote sensors (Pi Zero units)
@@ -187,7 +187,7 @@ class SplitStoneServer:
         self._udp_thread = None
         self._running = False
         
-        logger.info(f"SplitStone Server - UDP port {self.config['server']['udp_port']}")
+        logger.info(f"RockTimer Server - UDP port {self.config['server']['udp_port']}")
 
     def _tts_env(self) -> dict:
         """Environment variables for TTS subprocesses.
@@ -215,7 +215,7 @@ class SplitStoneServer:
         return env
 
     def _tts_debug_log_path(self) -> str:
-        return self.config.get('server', {}).get('tts_debug_log', '/var/log/splitstone-tts-spawn.log')
+        return self.config.get('server', {}).get('tts_debug_log', '/var/log/rocktimer-tts-spawn.log')
 
     def _spawn_tts(self, text: str) -> None:
         """Spawn the TTS helper script and log spawn details for troubleshooting."""
@@ -711,7 +711,7 @@ class SplitStoneServer:
 
 
 # Global server-instans
-server = SplitStoneServer()
+server = RockTimerServer()
 
 
 @asynccontextmanager
@@ -727,7 +727,7 @@ async def lifespan(app: FastAPI):
     # gpiozero hanterar cleanup automatiskt
 
 
-app = FastAPI(title="SplitStone", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="RockTimer", version="1.0.0", lifespan=lifespan)
 
 
 @app.post("/api/arm")
@@ -855,7 +855,7 @@ async def root():
     index_path = static_path / "index.html"
     if index_path.exists():
         return FileResponse(index_path)
-    return HTMLResponse("<h1>SplitStone</h1>")
+    return HTMLResponse("<h1>RockTimer</h1>")
 
 
 def main():

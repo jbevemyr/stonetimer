@@ -1,4 +1,4 @@
-# SplitStone - Pi 4 (Central Server + Hog Close sensor)
+# RockTimer - Pi 4 (Central Server + Hog Close sensor)
 
 device_id: "hog_close"
 

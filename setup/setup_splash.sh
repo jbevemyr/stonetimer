@@ -1,20 +1,20 @@
 #!/bin/bash
-# Boot splash screen setup for SplitStone (Plymouth)
+# Boot splash screen setup for RockTimer (Plymouth)
 # Run on the Pi 4 (or any Debian-based system using Plymouth).
 #
-# This installs Plymouth, creates a simple SplitStone theme, enables "splash"
+# This installs Plymouth, creates a simple RockTimer theme, enables "splash"
 # on the kernel cmdline, and sets the default Plymouth theme.
 
 set -euo pipefail
 
-TITLE_DEFAULT="SplitStone"
+TITLE_DEFAULT="RockTimer"
 SUBTITLE_DEFAULT="jb@bevemyr.com"
 
 TITLE="${1:-$TITLE_DEFAULT}"
 SUBTITLE="${2:-$SUBTITLE_DEFAULT}"
 
 echo "==================================="
-echo "SplitStone Boot Splash (Plymouth)"
+echo "RockTimer Boot Splash (Plymouth)"
 echo "==================================="
 
 if [ "${EUID}" -ne 0 ]; then
@@ -26,19 +26,19 @@ echo "[1/5] Installing Plymouth (and SVG renderer)..."
 apt-get update
 apt-get install -y plymouth plymouth-themes librsvg2-bin
 
-THEME_DIR="/usr/share/plymouth/themes/splitstone"
+THEME_DIR="/usr/share/plymouth/themes/rocktimer"
 mkdir -p "${THEME_DIR}"
 
-echo "[2/5] Writing SplitStone Plymouth theme..."
-cat > "${THEME_DIR}/splitstone.plymouth" <<'EOF'
+echo "[2/5] Writing RockTimer Plymouth theme..."
+cat > "${THEME_DIR}/rocktimer.plymouth" <<'EOF'
 [Plymouth Theme]
-Name=SplitStone
-Description=SplitStone boot splash
+Name=RockTimer
+Description=RockTimer boot splash
 ModuleName=script
 
 [script]
-ImageDir=/usr/share/plymouth/themes/splitstone
-ScriptFile=/usr/share/plymouth/themes/splitstone/splitstone.script
+ImageDir=/usr/share/plymouth/themes/rocktimer
+ScriptFile=/usr/share/plymouth/themes/rocktimer/rocktimer.script
 EOF
 
 echo "[3/5] Generating splash image (curling stone + text)..."
@@ -197,8 +197,8 @@ else
 fi
 
 echo "[4/5] Writing Plymouth script (shows splash.png)..."
-cat > "${THEME_DIR}/splitstone.script" <<'EOF'
-# SplitStone Plymouth script theme (image-based)
+cat > "${THEME_DIR}/rocktimer.script" <<'EOF'
+# RockTimer Plymouth script theme (image-based)
 
 Plymouth.SetBackgroundTopColor(0.0, 0.0, 0.0);
 Plymouth.SetBackgroundBottomColor(0.0, 0.0, 0.0);
@@ -222,7 +222,7 @@ fun status_callback(status) {
 Plymouth.SetUpdateStatusFunction(status_callback);
 EOF
 
-chmod 0644 "${THEME_DIR}/splitstone.plymouth" "${THEME_DIR}/splitstone.script"
+chmod 0644 "${THEME_DIR}/rocktimer.plymouth" "${THEME_DIR}/rocktimer.script"
 
 echo "[5/5] Enabling 'splash' in kernel cmdline (if missing)..."
 CMDLINE_FILE=""
@@ -258,15 +258,15 @@ if [ -n "${CMDLINE_FILE}" ]; then
   fi
 fi
 
-echo "Setting default Plymouth theme to 'splitstone'..."
+echo "Setting default Plymouth theme to 'rocktimer'..."
 if command -v plymouth-set-default-theme >/dev/null 2>&1; then
   # -R rebuilds initramfs when applicable
-  plymouth-set-default-theme -R splitstone || true
+  plymouth-set-default-theme -R rocktimer || true
 else
   mkdir -p /etc/plymouth
   cat > /etc/plymouth/plymouthd.conf <<EOF
 [Daemon]
-Theme=splitstone
+Theme=rocktimer
 EOF
   if command -v update-initramfs >/dev/null 2>&1; then
     update-initramfs -u || true

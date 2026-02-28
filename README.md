@@ -1,6 +1,6 @@
-# SplitStone - Curling Timing System
+# RockTimer - Curling Timing System
 
-SplitStone is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
+RockTimer is a DIY curling stone timing system that measures split times between the **tee line**, the **near hog line**, and the **far hog line** using simple laser trip sensors.
 
 **Perfect for:** Practice sessions, coaching, analyzing stone speed and release consistency
 
@@ -20,7 +20,7 @@ It is designed for a **3‑Pi setup**:
 - **Pi 4 (server at near hog line)**: runs the central server + touchscreen UI + optional voice announcements
 - **2× Pi Zero 2 W (tee + far hog)**: read sensors and send trigger timestamps over UDP
 
-**Credit:** Inspired by Larry Ehnert's LarrySplitStone (`LarrySplitStone.com`).
+**Credit:** Inspired by Larry Ehnert's LarryRockTimer (`LarryRockTimer.com`).
 
 ## Quick Start Summary
 
@@ -36,7 +36,7 @@ It is designed for a **3‑Pi setup**:
 
 ## Documentation
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to build your first SplitStone (recommended for beginners)
+- **[QUICKSTART.md](QUICKSTART.md)** - Step-by-step guide to build your first RockTimer (recommended for beginners)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical deep-dive: system design, protocols, data flow
 - **README.md** (this file) - Complete reference guide
 
@@ -61,21 +61,21 @@ Below are the “from zero” steps for a brand new Raspberry Pi OS installation
 
 **Prerequisites**
 - Raspberry Pi OS installed (Bookworm/Bullseye), SSH enabled
-- (Recommended) Pi 4 acts as the SplitStone **Wi‑Fi AP**
+- (Recommended) Pi 4 acts as the RockTimer **Wi‑Fi AP**
 
 **1) Clone and install**
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/splitstone.git
-cd splitstone
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
 
 # Installs server + kiosk (Chromium fullscreen) + dependencies
 sudo ./install_server.sh
 ```
 
-**2) (Recommended) Set up SplitStone Wi‑Fi (AP)**
+**2) (Recommended) Set up RockTimer Wi‑Fi (AP)**
 
 ```bash
 sudo ./setup/setup_network.sh
@@ -84,13 +84,13 @@ sudo reboot
 
 After reboot:
 - The server IP is typically **`192.168.50.1`**
-- Web UI: **`http://192.168.50.1:8080`** (or `http://splitstone` if you also set up DNS/port 80)
+- Web UI: **`http://192.168.50.1:8080`** (or `http://rocktimer` if you also set up DNS/port 80)
 
 **3) Start / check status**
 
 ```bash
-sudo systemctl enable --now splitstone-server.service splitstone-kiosk.service
-systemctl status splitstone-server.service splitstone-kiosk.service --no-pager
+sudo systemctl enable --now rocktimer-server.service rocktimer-kiosk.service
+systemctl status rocktimer-server.service rocktimer-kiosk.service --no-pager
 ```
 
 **4) (Optional) Chrony from the installer**
@@ -98,14 +98,14 @@ systemctl status splitstone-server.service splitstone-kiosk.service --no-pager
 To skip prompts:
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 ./install_server.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```
 
 ### Pi Zero 2 W (Sensor: tee or hog_far)
 
 **Prerequisites**
 - Raspberry Pi OS installed
-- Wi‑Fi preconfigured to join the SplitStone SSID (default `splitstone`)
+- Wi‑Fi preconfigured to join the RockTimer SSID (default `rocktimer`)
 - SSH enabled (so you can run the installer remotely)
 
 **1) Clone and install**
@@ -113,8 +113,8 @@ sudo SPLITSTONE_CONFIGURE_CHRONY=1 ./install_server.sh
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/splitstone.git
-cd splitstone
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
 
 # Choose tee or hog_far when prompted
 sudo ./install_sensor.sh
@@ -122,26 +122,26 @@ sudo ./install_sensor.sh
 
 **2) Point the sensor at the Pi 4**
 
-Verify in `/opt/splitstone/config.yaml` that the server points to the Pi 4:
+Verify in `/opt/rocktimer/config.yaml` that the server points to the Pi 4:
 
 - `host: "192.168.50.1"`
 
 **3) Start / check status**
 
 ```bash
-sudo systemctl enable --now splitstone-sensor.service
-systemctl status splitstone-sensor.service --no-pager
+sudo systemctl enable --now rocktimer-sensor.service
+systemctl status rocktimer-sensor.service --no-pager
 ```
 
 **4) (Optional) Chrony from the installer**
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 SPLITSTONE_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
 ## Network (Pi 4 as Wi‑Fi Access Point)
 
-SplitStone is designed to run on a **local Wi‑Fi network** created by the Pi 4:
+RockTimer is designed to run on a **local Wi‑Fi network** created by the Pi 4:
 
 - **Pi 4**: runs the server + acts as a **Wi‑Fi Access Point** (AP), typically `192.168.50.1`
 - **Pi Zero 2 W** units: connect to the Pi 4 Wi‑Fi and send UDP triggers to the server
@@ -153,13 +153,13 @@ sudo ./setup/setup_network.sh
 ```
 
 After running it:
-- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `splitstone`)
+- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `rocktimer`)
 - Verify they get an IP in the `192.168.50.x` range
 - Ensure the server IP in the sensor config is set to the Pi 4 address (e.g. `192.168.50.1`)
 
 ### Viewing times from a phone
 
-If you have a phone/tablet, you can join the SplitStone Wi‑Fi network and open:
+If you have a phone/tablet, you can join the RockTimer Wi‑Fi network and open:
 
 - `http://192.168.50.1` (or `http://192.168.50.1:8080`)
 
@@ -167,21 +167,21 @@ This lets you view live times from your phone and press **Rearm** without using 
 
 ### No touchscreen required
 
-The touchscreen is optional. You can build SplitStone without a display and rely on:
+The touchscreen is optional. You can build RockTimer without a display and rely on:
 
-- A **phone/tablet** connected to the SplitStone Wi‑Fi network
+- A **phone/tablet** connected to the RockTimer Wi‑Fi network
 - An **Apple Watch** companion (future / external app integration)
 - Any **laptop/desktop** on the same Wi‑Fi network using a web browser
 
-### Local hostname: http://splitstone
+### Local hostname: http://rocktimer
 
 If you use the provided Wi‑Fi AP setup, dnsmasq can be configured to resolve:
 
-- `splitstone` → `192.168.50.1`
+- `rocktimer` → `192.168.50.1`
 
-So you can type `http://splitstone` in your browser.
+So you can type `http://rocktimer` in your browser.
 
-Note: SplitStone itself runs on **port 8080** by default. If you want plain port **80**,
+Note: RockTimer itself runs on **port 8080** by default. If you want plain port **80**,
 use the optional Nginx reverse proxy setup:
 
 ```bash
@@ -190,10 +190,10 @@ sudo ./setup/setup_nginx_proxy.sh
 
 ### Phones complaining about "No Internet" (optional)
 
-If the Pi 4 Wi‑Fi network has no upstream internet (common for SplitStone), phones may show a warning like
+If the Pi 4 Wi‑Fi network has no upstream internet (common for RockTimer), phones may show a warning like
 “No internet” and sometimes try to switch away from Wi‑Fi.
 
-SplitStone can reduce this annoyance by answering common captive-portal / connectivity checks locally:
+RockTimer can reduce this annoyance by answering common captive-portal / connectivity checks locally:
 
 - `setup/setup_network.sh` adds dnsmasq rules that map those check domains to the Pi 4 IP
 - `setup/setup_nginx_proxy.sh` (port 80) returns the expected small responses (204/Success/text)
@@ -210,7 +210,7 @@ sudo reboot
 
 If you want a simple boot splash during OS startup that shows:
 
-- **SplitStone**
+- **RockTimer**
 - **jb@bevemyr.com**
 
 …you can enable a custom Plymouth theme:
@@ -222,14 +222,14 @@ sudo ./setup/setup_splash.sh
 You can also override the text:
 
 ```bash
-sudo ./setup/setup_splash.sh "SplitStone" "jb@bevemyr.com"
+sudo ./setup/setup_splash.sh "RockTimer" "jb@bevemyr.com"
 ```
 
 This uses Plymouth and generates a simple image-based splash (curling stone + text). If you use a different display resolution than the Pi 7" touchscreen, re-run the script after switching displays so it can regenerate the image at the detected resolution.
 
 ### Apple Watch (future)
 
-The idea is to extend the Apple Watch app **“Curling Timer”** so it can display SplitStone times (and optionally arm/rearm).
+The idea is to extend the Apple Watch app **“Curling Timer”** so it can display RockTimer times (and optionally arm/rearm).
 The repository also contains a simple Apple Watch companion app under `apple-watch/` that can be used as a starting point.
 
 ## Time sync (Chrony)
@@ -239,24 +239,24 @@ Use **chrony** with the Pi 4 as the local time server.
 
 ### Quick setup via install scripts (recommended)
 
-Both install scripts can optionally configure chrony for you (idempotent: re-running updates the SplitStone block).
+Both install scripts can optionally configure chrony for you (idempotent: re-running updates the RockTimer block).
 
 - **Pi 4 (server)**:
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 ./install_server.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```
 
 Optional overrides:
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 SPLITSTONE_CHRONY_CIDR=192.168.50.0/24 ./install_server.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_CIDR=192.168.50.0/24 ./install_server.sh
 ```
 
 - **Pi Zero 2 W (sensor/client)**:
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 SPLITSTONE_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
 #### Faster “correct time” after long power-off (makestep)
@@ -270,10 +270,10 @@ Meaning: if the clock differs by more than **1 second**, chrony is allowed to **
 You can change this:
 
 ```bash
-sudo SPLITSTONE_CONFIGURE_CHRONY=1 SPLITSTONE_CHRONY_MAKESTEP_THRESHOLD=0.5 SPLITSTONE_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
+sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD=0.5 ROCKTIMER_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
 ```
 
-If you don't set `SPLITSTONE_CONFIGURE_CHRONY`, the installer will prompt you.
+If you don't set `ROCKTIMER_CONFIGURE_CHRONY`, the installer will prompt you.
 
 ### 1) Install chrony
 
@@ -289,7 +289,7 @@ sudo apt-get install -y chrony
 Edit `/etc/chrony/chrony.conf` on the Pi 4 and add something like:
 
 ```conf
-# Allow LAN clients (SplitStone Wi‑Fi network)
+# Allow LAN clients (RockTimer Wi‑Fi network)
 allow 192.168.50.0/24
 
 # Optional: keep stable even without internet
@@ -349,22 +349,22 @@ sudo ./install_sensor.sh
 
 ## Updating / Upgrading
 
-SplitStone is installed to **`/opt/splitstone`** and runs via systemd services. You can safely re-run the installers to apply updates.
+RockTimer is installed to **`/opt/rocktimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
 
 ### Recommended update flow (Pi 4 + Pi Zero)
 
 1) **Backup your config**
 
 ```bash
-sudo cp -a /opt/splitstone/config.yaml /opt/splitstone/config.yaml.bak.$(date -Is)
+sudo cp -a /opt/rocktimer/config.yaml /opt/rocktimer/config.yaml.bak.$(date -Is)
 ```
 
 2) **Update code**
 
-If `/opt/splitstone` contains a git checkout (it usually does after installation):
+If `/opt/rocktimer` contains a git checkout (it usually does after installation):
 
 ```bash
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo git pull
 ```
 
@@ -375,17 +375,17 @@ Otherwise, pull updates on your laptop and re-run the installer from the cloned 
 - Pi 4:
 
 ```bash
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo ./install_server.sh
-sudo systemctl restart splitstone-server.service
+sudo systemctl restart rocktimer-server.service
 ```
 
 - Pi Zero:
 
 ```bash
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo ./install_sensor.sh
-sudo systemctl restart splitstone-sensor.service
+sudo systemctl restart rocktimer-sensor.service
 ```
 
 ## Configuration
@@ -402,11 +402,11 @@ server:
 
 ## Hardware
 
-If you want to build your own SplitStone setup, this is the hardware used in this project.
+If you want to build your own RockTimer setup, this is the hardware used in this project.
 
 ### Bill of Materials (BOM)
 
-**Complete shopping list for one SplitStone system:**
+**Complete shopping list for one RockTimer system:**
 
 #### Compute Units
 - 1× Raspberry Pi 4 Model B (4GB or 8GB recommended)
@@ -552,11 +552,11 @@ DO  (digital out)     →    Pin 13 (GPIO 27)
 ### Bring-up checklist (first successful run)
 
 - **Server up**:
-  - `systemctl status splitstone-server.service --no-pager`
+  - `systemctl status rocktimer-server.service --no-pager`
   - Open UI: `http://<pi4-ip>:8080`
 - **Sensors up**:
-  - `systemctl status splitstone-sensor.service --no-pager`
-  - Watch logs while breaking the beam: `sudo journalctl -u splitstone-sensor -f`
+  - `systemctl status rocktimer-sensor.service --no-pager`
+  - Watch logs while breaking the beam: `sudo journalctl -u rocktimer-sensor -f`
 - **End-to-end test without hardware (UDP simulation)**:
 
 ```bash
@@ -568,7 +568,7 @@ python tools/simulate_triggers.py --server 127.0.0.1 --simulate
 The system can announce times using text-to-speech. Use a small amplifier module (e.g. HW-104/PAM8403)
 and a 3W speaker for an enclosure build.
 
-SplitStone uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
+RockTimer uses **Piper (Coqui TTS)** for speech. The server calls `/opt/piper/speak.sh`, which pipes Piper audio to `/usr/bin/aplay`.
 
 #### Faster callouts (optional)
 
@@ -581,20 +581,20 @@ It also caches a few short phrases (e.g. `ready to go`) so they play without mod
 To force the fast path, set:
 
 ```bash
-SPLITSTONE_TTS_FAST=1
+ROCKTIMER_TTS_FAST=1
 ```
 
 You can also tune Piper speech speed and the pause between digits:
 
 ```bash
 # Faster speech (lower is faster). Default: 0.75
-SPLITSTONE_PIPER_LENGTH_SCALE=0.75
+ROCKTIMER_PIPER_LENGTH_SCALE=0.75
 
 # Silence after each sentence (seconds). Default: 0.0
-SPLITSTONE_PIPER_SENTENCE_SILENCE=0.0
+ROCKTIMER_PIPER_SENTENCE_SILENCE=0.0
 
 # Pause between tokens in the stitched digit callouts (ms). Default: 20
-SPLITSTONE_TTS_TOKEN_PAUSE_MS=20
+ROCKTIMER_TTS_TOKEN_PAUSE_MS=20
 ```
 
 **Parts:**
@@ -680,20 +680,20 @@ sudo python tools/test_sensor.py
 
 ### Server won't start
 
-**Symptoms:** `systemctl status splitstone-server` shows failed/error
+**Symptoms:** `systemctl status rocktimer-server` shows failed/error
 
 **Solutions:**
 ```bash
 # Check logs for error details
-sudo journalctl -u splitstone-server -n 50
+sudo journalctl -u rocktimer-server -n 50
 
 # Common issues:
 # 1. Port 8080 already in use - change http_port in config.yaml
-# 2. Config file missing or invalid - verify /opt/splitstone/config.yaml exists
+# 2. Config file missing or invalid - verify /opt/rocktimer/config.yaml exists
 # 3. Python dependencies missing - re-run install_server.sh
 
 # Test server manually to see errors directly
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo venv/bin/python server/main.py
 ```
 
@@ -704,7 +704,7 @@ sudo venv/bin/python server/main.py
 **Solutions:**
 ```bash
 # 1. Test the sensor locally (on the Pi with the sensor)
-sudo python /opt/splitstone/tools/test_sensor.py
+sudo python /opt/rocktimer/tools/test_sensor.py
 # This should print "TRIGGER!" when you break the beam
 
 # 2. Check sensor wiring
@@ -713,7 +713,7 @@ sudo python /opt/splitstone/tools/test_sensor.py
 # - DO → GPIO 17
 
 # 3. Verify sensor logs
-sudo journalctl -u splitstone-sensor -f
+sudo journalctl -u rocktimer-sensor -f
 # You should see "TRIGGER! tee" (or hog_far) when breaking beam
 
 # 4. Check network connectivity (for Pi Zero sensors)
@@ -741,7 +741,7 @@ sudo amixer cset numid=3 1
 sudo /opt/piper/speak.sh "ready to go"
 
 # 5. Check TTS logs
-sudo tail -f /var/log/splitstone-tts.log
+sudo tail -f /var/log/rocktimer-tts.log
 
 # 6. Verify speaker wiring (see audio diagram in Hardware section)
 ```
@@ -753,7 +753,7 @@ sudo tail -f /var/log/splitstone-tts.log
 **Solutions:**
 ```bash
 # 1. Check if kiosk service is running
-systemctl status splitstone-kiosk
+systemctl status rocktimer-kiosk
 
 # 2. Test touch in terminal
 # Install evtest: sudo apt-get install evtest
@@ -766,7 +766,7 @@ sudo evtest
 # Reboot after editing
 
 # 4. Manual test (stop kiosk first)
-sudo systemctl stop splitstone-kiosk
+sudo systemctl stop rocktimer-kiosk
 export DISPLAY=:0
 chromium --kiosk http://localhost:8080
 ```
@@ -799,7 +799,7 @@ sudo systemctl restart chrony
 
 ### Network issues (Pi 4 as AP)
 
-**Symptoms:** Pi Zero can't connect to splitstone Wi-Fi
+**Symptoms:** Pi Zero can't connect to rocktimer Wi-Fi
 
 **Solutions:**
 ```bash
@@ -825,8 +825,8 @@ sudo systemctl restart hostapd
 # 5. Verify Pi Zero Wi-Fi config
 # On Pi Zero, edit /etc/wpa_supplicant/wpa_supplicant.conf
 network={
-    ssid="splitstone"
-    psk="splitstone"
+    ssid="rocktimer"
+    psk="rocktimer"
     key_mgmt=WPA-PSK
 }
 ```
@@ -848,7 +848,7 @@ network={
 # Settings → Privacy → Clear browsing data
 
 # 4. Test from different device
-# Connect phone to splitstone Wi-Fi
+# Connect phone to rocktimer Wi-Fi
 # Open: http://192.168.50.1:8080
 ```
 
@@ -856,20 +856,20 @@ network={
 
 ```bash
 # View all logs
-sudo journalctl -u splitstone-server -f    # Server (Pi 4)
-sudo journalctl -u splitstone-sensor -f    # Sensor (Pi Zero)
-sudo journalctl -u splitstone-kiosk -f     # Kiosk display (Pi 4)
+sudo journalctl -u rocktimer-server -f    # Server (Pi 4)
+sudo journalctl -u rocktimer-sensor -f    # Sensor (Pi Zero)
+sudo journalctl -u rocktimer-kiosk -f     # Kiosk display (Pi 4)
 
 # Check system resources
 htop
 
 # Verify Python dependencies
-cd /opt/splitstone
+cd /opt/rocktimer
 source venv/bin/activate
 pip list
 
 # Full reinstall (last resort)
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo ./install_server.sh  # or install_sensor.sh
 ```
 

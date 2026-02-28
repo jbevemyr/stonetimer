@@ -1,6 +1,6 @@
-# SplitStone Quick Start Guide
+# RockTimer Quick Start Guide
 
-This guide will get you from zero to a working SplitStone system in ~3 hours.
+This guide will get you from zero to a working RockTimer system in ~3 hours.
 
 ## Prerequisites
 
@@ -24,7 +24,7 @@ This guide will get you from zero to a working SplitStone system in ~3 hours.
    - Pi 4: Desktop version
    - 2× Pi Zero: Lite version
    - Enable SSH during imaging (in Imager settings)
-   - Set username/password (e.g., pi/splitstone)
+   - Set username/password (e.g., pi/rocktimer)
 
 3. **Initial boot and SSH access**
    ```bash
@@ -48,8 +48,8 @@ This guide will get you from zero to a working SplitStone system in ~3 hours.
 sudo apt-get install -y git
 
 # Clone repository
-git clone https://github.com/jbevemyr/splitstone.git
-cd splitstone
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
 
 # Run installer (sets up server + kiosk + Wi-Fi AP + time sync)
 sudo ./install_server.sh
@@ -59,12 +59,12 @@ sudo ./install_server.sh
 # Answer "Y" when asked about chrony
 
 # Start services now (optional, but recommended so you can verify everything works)
-sudo systemctl start splitstone-server
+sudo systemctl start rocktimer-server
 
 # Enable + start kiosk mode (recommended if using a Pi 4 touchscreen)
 # "enable" makes it start automatically on boot.
-sudo systemctl enable splitstone-kiosk
-sudo systemctl start splitstone-kiosk
+sudo systemctl enable rocktimer-kiosk
+sudo systemctl start rocktimer-kiosk
 
 # Optional: add a boot splash screen (Plymouth)
 # Reboot is required to see it.
@@ -74,7 +74,7 @@ sudo ./setup/setup_splash.sh
 sudo ./setup/setup_network.sh
 # Note: this also enables internet sharing (NAT) by default so Pi Zero clients can reach the internet
 # via the Pi 4 uplink (typically eth0). To disable:
-# sudo SPLITSTONE_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
+# sudo ROCKTIMER_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
 
 # Quick verification (no reboot needed just to test):
 # ip -brief addr show wlan0   # should show 192.168.50.1/24
@@ -85,19 +85,19 @@ sudo reboot
 ```
 
 After reboot:
-- Pi 4 should create Wi-Fi network "splitstone" (password: "splitstone")
+- Pi 4 should create Wi-Fi network "rocktimer" (password: "rocktimer")
 - Pi 4 IP should be 192.168.50.1
 
 #### Pi Zero #1 (Tee sensor)
 
 ```bash
 # Connect Pi Zero to your regular Wi-Fi first (for installation)
-# After setup, configure it to connect to "splitstone" Wi-Fi
+# After setup, configure it to connect to "rocktimer" Wi-Fi
 
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/splitstone.git
-cd splitstone
+git clone https://github.com/jbevemyr/rocktimer.git
+cd rocktimer
 
 # Run installer and select "tee" when prompted
 sudo ./install_sensor.sh
@@ -113,8 +113,8 @@ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 Add:
 ```
 network={
-    ssid="splitstone"
-    psk="splitstone"
+    ssid="rocktimer"
+    psk="rocktimer"
     priority=10
 }
 ```
@@ -168,23 +168,23 @@ Each LM393 module has a potentiometer:
 
 **On Pi 4:**
 ```bash
-# SSH to Pi 4 (connect to splitstone Wi-Fi, then ssh pi@192.168.50.1)
-systemctl status splitstone-server --no-pager
-systemctl status splitstone-kiosk --no-pager
+# SSH to Pi 4 (connect to rocktimer Wi-Fi, then ssh pi@192.168.50.1)
+systemctl status rocktimer-server --no-pager
+systemctl status rocktimer-kiosk --no-pager
 ```
 
 **On each Pi Zero:**
 ```bash
 # SSH to Pi Zero via Pi 4 (find IP: sudo nmap -sn 192.168.50.0/24)
-systemctl status splitstone-sensor --no-pager
+systemctl status rocktimer-sensor --no-pager
 ```
 
 #### 2. Test web UI
 
-On your phone/laptop, connect to "splitstone" Wi-Fi and open:
+On your phone/laptop, connect to "rocktimer" Wi-Fi and open:
 - http://192.168.50.1:8080
 
-You should see the SplitStone interface with two time cards.
+You should see the RockTimer interface with two time cards.
 
 #### Sensor status indicators (Pi 4 UI)
 
@@ -196,7 +196,7 @@ In the top bar of the UI you will see small dots for the remote sensors (Tee / H
 
 **On each Pi Zero:**
 ```bash
-sudo journalctl -u splitstone-sensor -f
+sudo journalctl -u rocktimer-sensor -f
 ```
 
 Block the laser beam - you should see:
@@ -206,7 +206,7 @@ TRIGGER! tee
 
 **On Pi 4, check server receives triggers:**
 ```bash
-sudo journalctl -u splitstone-server -f
+sudo journalctl -u rocktimer-server -f
 ```
 
 When you break a beam, you should see:
@@ -217,7 +217,7 @@ Trigger: tee (or hog_close, or hog_far)
 #### 4. Simulate a stone pass
 
 ```bash
-cd /opt/splitstone
+cd /opt/rocktimer
 python tools/simulate_triggers.py --simulate
 ```
 
@@ -260,11 +260,11 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 ### "No triggers detected"
 
 1. Check sensor wiring (especially ground!)
-2. Test sensor: `sudo python /opt/splitstone/tools/test_sensor.py`
+2. Test sensor: `sudo python /opt/rocktimer/tools/test_sensor.py`
 3. Verify laser is hitting sensor (sensor LED should light up)
-4. Check logs: `sudo journalctl -u splitstone-sensor -f`
+4. Check logs: `sudo journalctl -u rocktimer-sensor -f`
 
-### "Can't connect to splitstone Wi-Fi"
+### "Can't connect to rocktimer Wi-Fi"
 
 1. Check hostapd: `sudo systemctl status hostapd`
 2. Verify IP: `ip addr show wlan0` (should be 192.168.50.1)
@@ -274,7 +274,7 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 
 1. Hard refresh: Ctrl+Shift+R (Chrome) or Ctrl+F5 (Firefox)
 2. Check WebSocket in browser console (F12)
-3. Restart server: `sudo systemctl restart splitstone-server`
+3. Restart server: `sudo systemctl restart rocktimer-server`
 
 ### "Times are wildly wrong"
 
@@ -286,14 +286,14 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 
 - **Voice announcements:** Enable in Settings (⚙️ icon in web UI)
   - Wire speaker to Pi 4 (see audio diagram in README)
-- **Customize:** Edit `/opt/splitstone/config.yaml`
+- **Customize:** Edit `/opt/rocktimer/config.yaml`
 - **Apple Watch:** Build companion app from `apple-watch/` directory
 - **Enclosures:** 3D print cases to protect Pi units on ice
 
 ## Support
 
 - Full documentation: See README.md
-- Issues: https://github.com/jbevemyr/splitstone/issues
+- Issues: https://github.com/jbevemyr/rocktimer/issues
 - Hardware details: See "Hardware" section in README.md
 
 ## Maintenance
@@ -307,10 +307,10 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 ### Software updates
 
 ```bash
-cd /opt/splitstone
+cd /opt/rocktimer
 sudo git pull
 sudo ./install_server.sh  # or install_sensor.sh
-sudo systemctl restart splitstone-server  # or splitstone-sensor
+sudo systemctl restart rocktimer-server  # or rocktimer-sensor
 ```
 
 ### Cleaning

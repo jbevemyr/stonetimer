@@ -1,4 +1,4 @@
-// Shared models for SplitStone iOS and watchOS apps
+// Shared models for RockTimer iOS and watchOS apps
 
 import Foundation
 import SwiftUI
@@ -72,7 +72,7 @@ public struct TimesRecord: Codable, Sendable, Identifiable {
 // MARK: - Timer State (shared observable)
 
 @MainActor
-public final class SplitStoneState: ObservableObject {
+public final class RockTimerState: ObservableObject {
     @Published public var systemState: SystemState = .idle
     @Published public var teeToHogMs: Double?
     @Published public var hogToHogMs: Double?

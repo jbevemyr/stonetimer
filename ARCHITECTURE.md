@@ -1,6 +1,6 @@
-# SplitStone System Architecture
+# RockTimer System Architecture
 
-This document describes the technical architecture of SplitStone.
+This document describes the technical architecture of RockTimer.
 
 ## System Overview
 
@@ -73,7 +73,7 @@ This document describes the technical architecture of SplitStone.
    - History tracking
    - TTS integration
 
-2. **Kiosk Mode** (`splitstone-kiosk.service`)
+2. **Kiosk Mode** (`rocktimer-kiosk.service`)
    - Chromium in fullscreen
    - Auto-start on boot
    - Touch-optimized
@@ -188,8 +188,8 @@ This document describes the technical architecture of SplitStone.
 │       └────────────────┴───────────────┘                  │
 │                        │                                  │
 │                     wlan0                                 │
-│                   SSID: splitstone                         │
-│                   PSK: splitstone                          │
+│                   SSID: rocktimer                         │
+│                   PSK: rocktimer                          │
 └────────────────────────┬──────────────────────────────────┘
                          │
           ┌──────────────┴──────────────┬─────────────────┐
@@ -202,10 +202,10 @@ This document describes the technical architecture of SplitStone.
 ```
 
 **Services:**
-- **hostapd:** Creates "splitstone" Wi-Fi network
+- **hostapd:** Creates "rocktimer" Wi-Fi network
 - **dnsmasq:** 
   - DHCP: assigns 192.168.50.10-100
-  - DNS: resolves "splitstone" → 192.168.50.1
+  - DNS: resolves "rocktimer" → 192.168.50.1
 - **chrony:** Time synchronization (critical for accurate timing)
 
 ### Time Synchronization
@@ -298,7 +298,7 @@ chronyc sources -v  # View time sources
 ## File Structure
 
 ```
-splitstone/
+rocktimer/
 ├── server/
 │   ├── main.py              # FastAPI server (Pi 4)
 │   └── static/
@@ -333,29 +333,29 @@ splitstone/
 
 ### Server (Pi 4)
 
-**`/etc/systemd/system/splitstone-server.service`**
-- Runs: `/opt/splitstone/venv/bin/python /opt/splitstone/server/main.py`
+**`/etc/systemd/system/rocktimer-server.service`**
+- Runs: `/opt/rocktimer/venv/bin/python /opt/rocktimer/server/main.py`
 - User: root (required for GPIO)
 - Restart: always
-- Logs: `journalctl -u splitstone-server`
+- Logs: `journalctl -u rocktimer-server`
 
-**`/etc/systemd/system/splitstone-kiosk.service`**
+**`/etc/systemd/system/rocktimer-kiosk.service`**
 - Runs: Chromium in kiosk mode
 - User: pi (regular user, for X11 access)
-- After: graphical.target, splitstone-server.service
+- After: graphical.target, rocktimer-server.service
 - Restart: always
 
 ### Sensor (Pi Zero)
 
-**`/etc/systemd/system/splitstone-sensor.service`**
-- Runs: `/opt/splitstone/venv/bin/python /opt/splitstone/sensor/sensor_daemon.py`
+**`/etc/systemd/system/rocktimer-sensor.service`**
+- Runs: `/opt/rocktimer/venv/bin/python /opt/rocktimer/sensor/sensor_daemon.py`
 - User: root (required for GPIO)
 - Restart: always
-- Logs: `journalctl -u splitstone-sensor`
+- Logs: `journalctl -u rocktimer-sensor`
 
 ## Configuration Files
 
-### `/opt/splitstone/config.yaml`
+### `/opt/rocktimer/config.yaml`
 
 **Used by:** Both server and sensor daemons
 
@@ -386,7 +386,7 @@ server:
 
 **Key features:**
 - DHCP range: 192.168.50.10-100
-- DNS: "splitstone" → 192.168.50.1
+- DNS: "rocktimer" → 192.168.50.1
 - Captive portal bypass (for phones)
 
 ### `/etc/chrony/chrony.conf`
@@ -444,7 +444,7 @@ makestep 1.0 3
 
 ### Wi-Fi Network
 
-- **Default password:** "splitstone" (change in setup script)
+- **Default password:** "rocktimer" (change in setup script)
 - **WPA2-PSK encryption**
 - **No internet gateway** (isolated network)
 
@@ -465,7 +465,7 @@ makestep 1.0 3
 ### Alternative Displays
 
 Replace touchscreen with:
-- **Phone/tablet:** Connect to splitstone Wi-Fi, open browser
+- **Phone/tablet:** Connect to rocktimer Wi-Fi, open browser
 - **Apple Watch:** Use companion app (see `apple-watch/`)
 
 ## Testing
@@ -501,7 +501,7 @@ python tools/simulate_triggers.py --simulate --tee-hog 3.5 --hog-hog 15.0
 
 **Sensor test (on each Pi):**
 ```bash
-sudo python /opt/splitstone/tools/test_sensor.py
+sudo python /opt/rocktimer/tools/test_sensor.py
 ```
 
 **Time sync test:**
@@ -517,16 +517,16 @@ chronyc tracking | grep "System time"
 
 ```bash
 # Server
-sudo journalctl -u splitstone-server -f
+sudo journalctl -u rocktimer-server -f
 
 # Sensor
-sudo journalctl -u splitstone-sensor -f
+sudo journalctl -u rocktimer-sensor -f
 
 # Kiosk
-sudo journalctl -u splitstone-kiosk -f
+sudo journalctl -u rocktimer-kiosk -f
 
 # TTS
-tail -f /var/log/splitstone-tts.log
+tail -f /var/log/rocktimer-tts.log
 ```
 
 ### Network Debugging
@@ -552,7 +552,7 @@ sudo tcpdump -i wlan0 -n port 5000
 
 ```bash
 # Test GPIO (manual trigger)
-sudo python /opt/splitstone/tools/test_sensor.py
+sudo python /opt/rocktimer/tools/test_sensor.py
 
 # Check GPIO state
 gpio readall  # If gpio command is installed

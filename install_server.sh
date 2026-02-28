@@ -1,10 +1,10 @@
 #!/bin/bash
-# Install SplitStone Server on Raspberry Pi 4
+# Install RockTimer Server on Raspberry Pi 4
 
 set -e
 
 echo "==================================="
-echo "SplitStone Server Installation"
+echo "RockTimer Server Installation"
 echo "==================================="
 
 # Ensure we run as root
@@ -14,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Install path
-INSTALL_DIR="/opt/splitstone"
+INSTALL_DIR="/opt/rocktimer"
 USER="${SUDO_USER:-$(whoami)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -38,8 +38,8 @@ apt-get install -y \
 echo "[2/5] Creating install directory..."
 mkdir -p "${INSTALL_DIR}"
 
-# Copy source into /opt/splitstone (safe to re-run).
-# If the script is already running from /opt/splitstone, do NOT copy recursively into itself.
+# Copy source into /opt/rocktimer (safe to re-run).
+# If the script is already running from /opt/rocktimer, do NOT copy recursively into itself.
 if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
     echo "Copying files to ${INSTALL_DIR}..."
     # Preserve permissions and dotfiles, but do not overwrite local runtime/config artifacts.
@@ -120,7 +120,7 @@ set -euo pipefail
 # - Generates raw audio once
 # - Prefers the Pi analog jack if present (bcm2835 Headphones)
 # - Tries a few ALSA output devices until one works
-# - Logs errors to /var/log/splitstone-tts.log
+# - Logs errors to /var/log/rocktimer-tts.log
 
 TEXT="${*:-}"
 if [ -z "${TEXT}" ]; then
@@ -140,7 +140,7 @@ if [ -z "${PIPER}" ]; then
 fi
 MODEL="/opt/piper/voices/en_US-lessac-medium.onnx"
 APLAY="/usr/bin/aplay"
-LOG="/var/log/splitstone-tts.log"
+LOG="/var/log/rocktimer-tts.log"
 MKTEMP="/usr/bin/mktemp"
 RM="/bin/rm"
 DATE="/usr/bin/date"
@@ -151,8 +151,8 @@ FMT="S16_LE"
 CH="1"
 
 # Piper tuning (lower length_scale = faster speech). Can be overridden via env vars.
-LENGTH_SCALE="${SPLITSTONE_PIPER_LENGTH_SCALE:-0.75}"
-SENTENCE_SILENCE="${SPLITSTONE_PIPER_SENTENCE_SILENCE:-0.0}"
+LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
+SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
 
 log() { echo "$("${DATE}" -Is) $*" >> "${LOG}"; }
 
@@ -178,8 +178,8 @@ if [ ! -x "${AWK}" ]; then
 fi
 
 # Optional fast path: use cached raw fragments for phrases like "3 point 1 8"
-# Enable explicitly with SPLITSTONE_TTS_FAST=1, or auto-enable for matching time phrases if cache exists.
-FAST="${SPLITSTONE_TTS_FAST:-}"
+# Enable explicitly with ROCKTIMER_TTS_FAST=1, or auto-enable for matching time phrases if cache exists.
+FAST="${ROCKTIMER_TTS_FAST:-}"
 CACHE_DIR="/opt/piper/cache"
 FRAG_DIR="${CACHE_DIR}/fragments"
 PHRASE_DIR="${CACHE_DIR}/phrases"
@@ -230,7 +230,7 @@ if { [ "${FAST}" = "1" ] || [ "${phrase_key}" = "ready_to_go" ]; } && [ -f "${ph
 fi
 
 if { [ "${FAST}" = "1" ] || [ "${is_time_phrase}" = "1" ]; } && [ -d "${FRAG_DIR}" ] && [ -f "${SIL}" ]; then
-  tmp="$("${MKTEMP}" /tmp/splitstone-tts.XXXXXX.raw)"
+  tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
   trap '"${RM}" -f "$tmp"' EXIT
 
   # Build concatenated raw audio
@@ -284,7 +284,7 @@ if { [ "${FAST}" = "1" ] || [ "${is_time_phrase}" = "1" ]; } && [ -d "${FRAG_DIR
   # Fall back to normal Piper synthesis below if fragments are missing.
 fi
 
-tmp="$("${MKTEMP}" /tmp/splitstone-tts.XXXXXX.raw)"
+tmp="$("${MKTEMP}" /tmp/rocktimer-tts.XXXXXX.raw)"
 trap '"${RM}" -f "$tmp"' EXIT
 
 if ! echo "${TEXT}" | "${PIPER}" --model "${MODEL}" --output-raw --length_scale "${LENGTH_SCALE}" --sentence_silence "${SENTENCE_SILENCE}" > "${tmp}" 2>> "${LOG}"; then
@@ -338,9 +338,9 @@ mkdir -p "${FRAG_DIR}"
 mkdir -p "${PHRASE_DIR}"
 
 # Defaults: keep callouts snappy on Raspberry Pi
-PIPER_LENGTH_SCALE="${SPLITSTONE_PIPER_LENGTH_SCALE:-0.75}"
-PIPER_SENTENCE_SILENCE="${SPLITSTONE_PIPER_SENTENCE_SILENCE:-0.0}"
-TOKEN_PAUSE_MS="${SPLITSTONE_TTS_TOKEN_PAUSE_MS:-20}"
+PIPER_LENGTH_SCALE="${ROCKTIMER_PIPER_LENGTH_SCALE:-0.75}"
+PIPER_SENTENCE_SILENCE="${ROCKTIMER_PIPER_SENTENCE_SILENCE:-0.0}"
+TOKEN_PAUSE_MS="${ROCKTIMER_TTS_TOKEN_PAUSE_MS:-20}"
 
 # Generate raw fragments for digits + hundredths + "point"/"oh" (used by the UI's time callouts).
 # This avoids re-loading the model on every callout.
@@ -383,11 +383,11 @@ fi
 
 echo "[4c/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"
-CHRONY_MARKER_BEGIN="# SplitStone chrony begin"
-CHRONY_MARKER_END="# SplitStone chrony end"
+CHRONY_MARKER_BEGIN="# RockTimer chrony begin"
+CHRONY_MARKER_END="# RockTimer chrony end"
 CHRONY_CIDR_DEFAULT="192.168.50.0/24"
-CHRONY_CIDR="${SPLITSTONE_CHRONY_CIDR:-${CHRONY_CIDR_DEFAULT}}"
-CONFIGURE_CHRONY="${SPLITSTONE_CONFIGURE_CHRONY:-}"
+CHRONY_CIDR="${ROCKTIMER_CHRONY_CIDR:-${CHRONY_CIDR_DEFAULT}}"
+CONFIGURE_CHRONY="${ROCKTIMER_CONFIGURE_CHRONY:-}"
 
 if [ "${CONFIGURE_CHRONY}" = "1" ]; then
     configure_chrony="y"
@@ -404,11 +404,11 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
     else
         CHRONY_MAKESTEP_THRESHOLD_DEFAULT="1.0"
         CHRONY_MAKESTEP_LIMIT_DEFAULT="3"
-        CHRONY_MAKESTEP_THRESHOLD="${SPLITSTONE_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
-        CHRONY_MAKESTEP_LIMIT="${SPLITSTONE_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
+        CHRONY_MAKESTEP_THRESHOLD="${ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
+        CHRONY_MAKESTEP_LIMIT="${ROCKTIMER_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
 
         tmp="$(mktemp)"
-        # Remove any previous SplitStone chrony block
+        # Remove any previous RockTimer chrony block
         awk -v b="${CHRONY_MARKER_BEGIN}" -v e="${CHRONY_MARKER_END}" '
           $0==b {skip=1; next}
           $0==e {skip=0; next}
@@ -420,7 +420,7 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
         cat >> "${CHRONY_CONF}" << EOF
 
 ${CHRONY_MARKER_BEGIN}
-# Allow clients from the SplitStone subnet
+# Allow clients from the RockTimer subnet
 allow ${CHRONY_CIDR}
 # Optional: act as a local time source even if internet is unavailable
 local stratum 10
@@ -440,9 +440,9 @@ fi
 echo "[5/5] Installing systemd services..."
 
 # Server service (runs as root for GPIO access)
-cat > /etc/systemd/system/splitstone-server.service << EOF
+cat > /etc/systemd/system/rocktimer-server.service << EOF
 [Unit]
-Description=SplitStone Central Server
+Description=RockTimer Central Server
 After=network.target
 
 [Service]
@@ -450,7 +450,7 @@ Type=simple
 User=root
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
-Environment="SPLITSTONE_TTS_FAST=1"
+Environment="ROCKTIMER_TTS_FAST=1"
 ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/server/main.py
 Restart=always
 RestartSec=5
@@ -469,7 +469,7 @@ cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>SplitStone</title>
+  <title>RockTimer</title>
   <style>
     html, body { height: 100%; margin: 0; background: #000; color: #fff; font-family: sans-serif; }
     .wrap { height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
@@ -481,7 +481,7 @@ cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
 </head>
 <body>
   <div class="wrap">
-    <div class="title">SplitStone</div>
+    <div class="title">RockTimer</div>
     <div class="sub">Starting… <span class="dot"></span></div>
   </div>
   <script>
@@ -500,11 +500,11 @@ cat > ${INSTALL_DIR}/kiosk_loading.html << 'EOF'
 EOF
 chown ${USER}:${USER} ${INSTALL_DIR}/kiosk_loading.html
 
-cat > /etc/systemd/system/splitstone-kiosk.service << EOF
+cat > /etc/systemd/system/rocktimer-kiosk.service << EOF
 [Unit]
-Description=SplitStone Kiosk Display
-After=graphical.target splitstone-server.service
-Wants=splitstone-server.service
+Description=RockTimer Kiosk Display
+After=graphical.target rocktimer-server.service
+Wants=rocktimer-server.service
 
 [Service]
 Type=simple
@@ -528,7 +528,7 @@ WantedBy=graphical.target
 EOF
 
 systemctl daemon-reload
-systemctl enable splitstone-server.service
+systemctl enable rocktimer-server.service
 
 # Disable screen blanking
 mkdir -p /home/${USER}/.config/lxsession/LXDE-pi/
@@ -544,7 +544,7 @@ chown -R ${USER}:${USER} /home/${USER}/.config/
 # override its autostart so we don't briefly show panel/desktop before Chromium.
 mkdir -p /home/${USER}/.config/labwc/
 cat > /home/${USER}/.config/labwc/autostart << 'EOF'
-# SplitStone kiosk: override Raspberry Pi OS default labwc autostart
+# RockTimer kiosk: override Raspberry Pi OS default labwc autostart
 # (prevents panel + desktop icons + keyring prompts during boot)
 /bin/true
 EOF
@@ -552,9 +552,9 @@ chown -R ${USER}:${USER} /home/${USER}/.config/labwc/
 
 # Also disable the system default labwc autostart (wf-panel/pcmanfm) to avoid any desktop flash.
 if [ -f /etc/xdg/labwc/autostart ]; then
-  cp -n /etc/xdg/labwc/autostart /etc/xdg/labwc/autostart.splitstone.bak || true
+  cp -n /etc/xdg/labwc/autostart /etc/xdg/labwc/autostart.rocktimer.bak || true
   cat > /etc/xdg/labwc/autostart << 'EOF'
-# SplitStone kiosk: minimal labwc autostart
+# RockTimer kiosk: minimal labwc autostart
 # (disables panel + desktop icons to avoid showing a desktop before the kiosk)
 /usr/bin/kanshi &
 EOF
@@ -566,11 +566,11 @@ echo "Installation complete!"
 echo "==================================="
 echo ""
 echo "Start the server:"
-echo "  sudo systemctl start splitstone-server"
+echo "  sudo systemctl start rocktimer-server"
 echo ""
 echo "Start kiosk mode:"
-echo "  sudo systemctl enable splitstone-kiosk"
-echo "  sudo systemctl start splitstone-kiosk"
+echo "  sudo systemctl enable rocktimer-kiosk"
+echo "  sudo systemctl start rocktimer-kiosk"
 echo ""
 echo "Web UI: http://localhost:8080"
 echo ""

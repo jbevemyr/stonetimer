@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
     @Environment(\.horizontalSizeClass) var hSizeClass
 
     var body: some View {
@@ -23,8 +23,8 @@ struct ContentView: View {
 // MARK: - Portrait
 
 struct PortraitView: View {
-    @EnvironmentObject var state: SplitStoneState
-    @EnvironmentObject var client: SplitStoneClient
+    @EnvironmentObject var state: RockTimerState
+    @EnvironmentObject var client: RockTimerClient
 
     var body: some View {
         VStack(spacing: 0) {
@@ -65,7 +65,7 @@ struct PortraitView: View {
 // MARK: - Landscape
 
 struct LandscapeView: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
 
     var body: some View {
         HStack(spacing: 0) {
@@ -95,12 +95,12 @@ struct LandscapeView: View {
 // MARK: - Header Bar
 
 struct HeaderBar: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
 
     var body: some View {
         HStack(spacing: 8) {
             HourglassLogo()
-            Text("Split Stone")
+            Text("Rock Timer")
                 .font(.headline)
                 .fontWeight(.bold)
                 .foregroundColor(.white)
@@ -179,7 +179,7 @@ struct StatusDot: View {
 // MARK: - Sensor Dots
 
 struct SensorDots: View {
-    @EnvironmentObject var state: SplitStoneState
+    @EnvironmentObject var state: RockTimerState
 
     var body: some View {
         HStack(spacing: 6) {
@@ -231,8 +231,8 @@ struct TimeCardView: View {
 // MARK: - Rearm Button
 
 struct RearmButton: View {
-    @EnvironmentObject var state: SplitStoneState
-    @EnvironmentObject var client: SplitStoneClient
+    @EnvironmentObject var state: RockTimerState
+    @EnvironmentObject var client: RockTimerClient
 
     var body: some View {
         Button {
@@ -265,8 +265,8 @@ struct RearmButton: View {
 // MARK: - History View
 
 struct HistoryView: View {
-    @EnvironmentObject var state: SplitStoneState
-    @EnvironmentObject var client: SplitStoneClient
+    @EnvironmentObject var state: RockTimerState
+    @EnvironmentObject var client: RockTimerClient
 
     var body: some View {
         VStack(spacing: 0) {
@@ -334,6 +334,6 @@ struct HistoryView: View {
 
 #Preview {
     ContentView()
-        .environmentObject(SplitStoneState())
-        .environmentObject(SplitStoneClient(state: SplitStoneState()))
+        .environmentObject(RockTimerState())
+        .environmentObject(RockTimerClient(state: RockTimerState()))
 }

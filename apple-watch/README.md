@@ -1,6 +1,6 @@
-# SplitStone – iOS & watchOS App
+# RockTimer – iOS & watchOS App
 
-SwiftUI-app för att visa och styra SplitStone från iPhone och Apple Watch.
+SwiftUI-app för att visa och styra RockTimer från iPhone och Apple Watch.
 
 ## Struktur
 
@@ -8,14 +8,14 @@ SwiftUI-app för att visa och styra SplitStone från iPhone och Apple Watch.
 apple-watch/
   Shared/
     Models/
-      SplitStoneModels.swift     – Gemensamma modeller (SystemState, TimerState m.m.)
+      RockTimerModels.swift     – Gemensamma modeller (SystemState, TimerState m.m.)
     Networking/
-      SplitStoneClient.swift     – REST + WebSocket-klient
-  SplitStoneIOS/
-    SplitStoneIOSApp.swift       – App entry point
+      RockTimerClient.swift     – REST + WebSocket-klient
+  RockTimerIOS/
+    RockTimerIOSApp.swift       – App entry point
     ContentView.swift           – Portrait + Landscape views
-  SplitStoneWatch/
-    SplitStoneWatchApp.swift     – Watch App entry point
+  RockTimerWatch/
+    RockTimerWatchApp.swift     – Watch App entry point
     WatchContentView.swift      – Tider + kontroller
 ```
 
@@ -23,12 +23,12 @@ apple-watch/
 
 1. Öppna Xcode → **File → New → Project**
 2. Välj **iOS → App**
-   - Product Name: `SplitStone`
-   - Bundle ID: `com.yourname.splitstone`
+   - Product Name: `RockTimer`
+   - Bundle ID: `com.yourname.rocktimer`
    - Interface: SwiftUI
    - Deployment Target: **iOS 26**
 3. Lägg till watchOS-target: **File → New → Target → watchOS → Watch App**
-   - Product Name: `SplitStoneWatch`
+   - Product Name: `RockTimerWatch`
    - Deployment Target: **watchOS 11**
    - Kryssa i "Include Notification Scene": nej
 
@@ -38,18 +38,18 @@ Drag-och-släpp filerna till rätt targets i Xcode:
 
 | Fil | Target |
 |-----|--------|
-| `Shared/Models/SplitStoneModels.swift` | iOS + watchOS |
-| `Shared/Networking/SplitStoneClient.swift` | iOS + watchOS |
-| `SplitStoneIOS/SplitStoneIOSApp.swift` | iOS |
-| `SplitStoneIOS/ContentView.swift` | iOS |
-| `SplitStoneWatch/SplitStoneWatchApp.swift` | watchOS |
-| `SplitStoneWatch/WatchContentView.swift` | watchOS |
+| `Shared/Models/RockTimerModels.swift` | iOS + watchOS |
+| `Shared/Networking/RockTimerClient.swift` | iOS + watchOS |
+| `RockTimerIOS/RockTimerIOSApp.swift` | iOS |
+| `RockTimerIOS/ContentView.swift` | iOS |
+| `RockTimerWatch/RockTimerWatchApp.swift` | watchOS |
+| `RockTimerWatch/WatchContentView.swift` | watchOS |
 
 > Välj båda targets för Shared-filerna (kryssa i checkboxarna i "Target Membership").
 
 ## Orientering (iOS)
 
-I Xcode → Targets → SplitStone → General → Device Orientation:
+I Xcode → Targets → RockTimer → General → Device Orientation:
 - ✅ Portrait
 - ✅ Landscape Left
 - ✅ Landscape Right
@@ -83,10 +83,10 @@ Eller mer specifikt:
 
 ## Byt server-IP
 
-Om Pi:n har annan IP, ändra i `SplitStoneIOSApp.swift`:
+Om Pi:n har annan IP, ändra i `RockTimerIOSApp.swift`:
 
 ```swift
-_client = StateObject(wrappedValue: SplitStoneClient(state: s, serverBase: "http://192.168.50.1:8080"))
+_client = StateObject(wrappedValue: RockTimerClient(state: s, serverBase: "http://192.168.50.1:8080"))
 ```
 
 ## Funktioner

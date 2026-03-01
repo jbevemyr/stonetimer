@@ -37,10 +37,10 @@ struct SettingsView: View {
                     Text("Connection")
                 }
 
-                // MARK: Voice
+                // MARK: iPhone Voice
                 Section {
                     Toggle(isOn: $draft.speech_enabled) {
-                        Label("Voice announcements", systemImage: "speaker.wave.2")
+                        Label("Read times on iPhone", systemImage: "iphone.radiowaves.left.and.right")
                     }
 
                     if draft.speech_enabled {
@@ -60,7 +60,9 @@ struct SettingsView: View {
                         .padding(.leading, 8)
                     }
                 } header: {
-                    Text("Voice")
+                    Text("iPhone Voice")
+                } footer: {
+                    Text("Reads times aloud on this iPhone. Works in headphones or speaker.")
                 }
 
                 // MARK: Auto-rearm

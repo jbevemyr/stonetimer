@@ -19,11 +19,13 @@ struct RockTimerApp: App {
 struct RootView: View {
     @StateObject private var state = RockTimerState()
     @StateObject private var client: RockTimerClient
+    @StateObject private var speech: SpeechManager
 
     init() {
         let s = RockTimerState()
         _state = StateObject(wrappedValue: s)
         _client = StateObject(wrappedValue: RockTimerClient(state: s))
+        _speech = StateObject(wrappedValue: SpeechManager(state: s))
     }
 
     var body: some View {

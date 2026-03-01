@@ -292,6 +292,26 @@ struct HistoryView: View {
                     .font(.caption)
                     .padding()
             } else {
+                // Column headers
+                HStack {
+                    Text("Time")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                        .fixedSize(horizontal: true, vertical: false)
+                    Spacer()
+                    Text("Tee–Hog")
+                        .font(.caption)
+                        .foregroundColor(Color.tee)
+                    Spacer()
+                    Text("Hog–Hog")
+                        .font(.caption)
+                        .foregroundColor(Color.hog)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 2)
+
+                Divider()
+
                 List(state.history) { record in
                     HStack {
                         Text(formattedTime(record.timestamp))

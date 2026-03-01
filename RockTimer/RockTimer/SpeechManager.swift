@@ -53,22 +53,30 @@ final class SpeechManager: ObservableObject {
             if settings.speak_ready {
                 speak("Ready to go", interrupt: true)
             }
+            // Reset trackers so we detect new times in the upcoming run
             lastTeeHogMs = nil
             lastHogHogMs = nil
         }
 
-        // Tee–Hog: announce once when first available
-        if settings.speak_tee_hog,
-           let ms = teeMs, ms > 0,
-           (lastTeeHogMs == nil || lastTeeHogMs! <= 0) {
-            speak(formatSeconds(ms / 1000))
-        }
+        // Reset trackers when server clears the times (new run started)
+        if teeMs == nil || teeMs! <= 0 { lastTeeHogMs = nil }
+        if hogMs == nil || hogMs! <= 0 { lastHogHogMs = nil }
 
-        // Hog–Hog: announce once when first available
-        if settings.speak_hog_hog,
-           let ms = hogMs, ms > 0,
-           (lastHogHogMs == nil || lastHogHogMs! <= 0) {
-            speak(formatSeconds(ms / 1000))
+        // Only announce times during measuring or completed – not while still showing old session values at arming
+        if newState == .measuring || newState == .completed {
+            // Tee–Hog: announce once when first available
+            if settings.speak_tee_hog,
+               let ms = teeMs, ms > 0,
+               lastTeeHogMs == nil {
+                speak(formatSeconds(ms / 1000))
+            }
+
+            // Hog–Hog: announce once when first available
+            if settings.speak_hog_hog,
+               let ms = hogMs, ms > 0,
+               lastHogHogMs == nil {
+                speak(formatSeconds(ms / 1000))
+            }
         }
 
         lastState = newState

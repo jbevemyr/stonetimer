@@ -10,7 +10,6 @@
 		54C157432F4E4F070046901C /* RockTimer Watch App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 54C157422F4E4F070046901C /* RockTimer Watch App.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		54C1576C2F5244440046901C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54C1576B2F5244440046901C /* Assets.xcassets */; };
 		54C1576D2F5244440046901C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 54C1576B2F5244440046901C /* Assets.xcassets */; };
-		54C1578B2F54E0320046901C /* info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 54C1578A2F54E0240046901C /* info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -41,7 +40,7 @@
 		54C157352F4E4F060046901C /* RockTimer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RockTimer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		54C157422F4E4F070046901C /* RockTimer Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "RockTimer Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		54C1576B2F5244440046901C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		54C1578A2F54E0240046901C /* info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = info.plist; sourceTree = "<group>"; };
+		54C1578A2F54E0240046901C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,7 +96,7 @@
 		54C1572C2F4E4F060046901C = {
 			isa = PBXGroup;
 			children = (
-				54C1578A2F54E0240046901C /* info.plist */,
+				54C1578A2F54E0240046901C /* Info.plist */,
 				54C1576B2F5244440046901C /* Assets.xcassets */,
 				54C157592F4E50B40046901C /* Shared */,
 				54C157372F4E4F060046901C /* RockTimer */,
@@ -209,7 +208,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				54C1576C2F5244440046901C /* Assets.xcassets in Resources */,
-				54C1578B2F54E0320046901C /* info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,7 +380,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bevemyr.RockTimer.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -415,7 +413,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bevemyr.RockTimer.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -453,7 +451,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bevemyr.RockTimer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
@@ -491,7 +489,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.bevemyr.RockTimer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;

@@ -291,25 +291,30 @@ struct HistoryView: View {
                     .font(.caption)
                     .padding()
             } else {
+                /*
                 // Column headers
                 HStack {
                     Text("Time")
-                        .font(.caption)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.bold)
                         .foregroundColor(.gray)
                         .fixedSize(horizontal: true, vertical: false)
                     Spacer()
                     Text("Tee–Hog")
-                        .font(.caption)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.bold)
                         .foregroundColor(Color.tee)
                     Spacer()
                     Text("Hog–Hog")
-                        .font(.caption)
+                        .font(.system(.body, design: .monospaced))
+                        .fontWeight(.bold)
                         .foregroundColor(Color.hog)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 2)
 
                 Divider()
+                 */
 
                 List(state.history) { record in
                     HStack {

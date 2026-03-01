@@ -16,7 +16,8 @@ struct WatchContentView: View {
         TabView {
             VStack(spacing: 3) {
                 WatchTimesView()
-                WatchControlView()
+                //WatchControlView()
+                RearmButton()
             }
         }
         .tabViewStyle(.carousel)
@@ -121,8 +122,52 @@ struct WatchTimeBlock: View {
         }
         .frame(maxWidth: .infinity)
         .padding(16)
-        .background(color)
+        //.background(color)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(
+                    LinearGradient(
+                        colors: [color],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+        )
         .clipShape(RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+struct RearmButton: View {
+    @EnvironmentObject var state: RockTimerState
+    @EnvironmentObject var client: RockTimerClient
+
+    var body: some View {
+        Button {
+            Task { await client.arm() }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 17, weight: .semibold))
+                Text("Rearm")
+                    .font(.system(size: 16, weight: .semibold))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(
+                LinearGradient(
+                    colors: [Color(red: 0.13, green: 0.76, blue: 0.76),
+                             Color(red: 0.18, green: 0.80, blue: 0.44)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .foregroundColor(Color.text)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .padding(8)
+        .disabled(state.systemState == .measuring)
+        .opacity(state.systemState == .measuring ? 0.5 : 1)
     }
 }
 

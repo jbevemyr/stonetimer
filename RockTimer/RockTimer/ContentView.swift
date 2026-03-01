@@ -118,7 +118,7 @@ struct HeaderBar: View {
                     .frame(width: 44, height: 44)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Stone")
+                    Text("Rock")
                         .font(.custom("Poppins-Black", size: 20))
                     Text("Timer")
                         .font(.custom("Poppins-Black", size: 20))

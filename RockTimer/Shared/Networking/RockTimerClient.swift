@@ -50,6 +50,7 @@ public final class RockTimerClient: ObservableObject {
         }
         Task { await fetchHistory() }
         Task { await fetchSensors() }
+        startHistoryPolling()
     }
 
     deinit {
@@ -120,6 +121,13 @@ public final class RockTimerClient: ObservableObject {
             Task { await self.fetchStatus() }
         }
         Task { await fetchStatus() }
+    }
+
+    private func startHistoryPolling() {
+        Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            Task { await self.fetchHistory() }
+        }
     }
 
     // MARK: - REST API
@@ -196,9 +204,14 @@ public final class RockTimerClient: ObservableObject {
     // MARK: - Helpers
 
     private func applyStatusPayload(_ response: StatusResponse) {
-        state.systemState = SystemState(rawValue: response.state) ?? .idle
+        let newState = SystemState(rawValue: response.state) ?? .idle
+        let wasCompleted = state.systemState != .completed && newState == .completed
+        state.systemState = newState
         state.teeToHogMs = response.session.tee_to_hog_close_ms
         state.hogToHogMs = response.session.hog_to_hog_ms
+        if wasCompleted {
+            Task { await fetchHistory() }
+        }
     }
 
     private func postAction(_ action: String) async {

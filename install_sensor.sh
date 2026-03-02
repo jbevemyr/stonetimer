@@ -99,7 +99,48 @@ fi
 # Replace the entire device_id line regardless of previous value.
 sed -i -E "s/^[[:space:]]*device_id:[[:space:]]*.*/device_id: \"${DEVICE_ID}\"/" ${INSTALL_DIR}/config.yaml
 
-echo "[4b/5] Optional: configuring time sync (chrony)..."
+echo "[4b/5] Optional: configuring Wi-Fi..."
+WPA_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
+CONFIGURE_WIFI="${STONETIMER_CONFIGURE_WIFI:-}"
+
+if [ "${CONFIGURE_WIFI}" = "1" ]; then
+    configure_wifi="y"
+elif [ "${CONFIGURE_WIFI}" = "0" ]; then
+    configure_wifi="n"
+else
+    read -r -p "Configure Wi-Fi to connect to StoneTimer AP? [Y/n] " configure_wifi
+    configure_wifi="${configure_wifi:-y}"
+fi
+
+if [[ "${configure_wifi}" =~ ^[Yy]$ ]] && [ -f "${WPA_CONF}" ]; then
+    # Add stonetimer (primary) and rocktimer (fallback during migration)
+    for ssid_name in stonetimer rocktimer; do
+        if ! grep -q "ssid=\"${ssid_name}\"" "${WPA_CONF}" 2>/dev/null; then
+            psk_value="${ssid_name}"
+            priority=10
+            [ "${ssid_name}" = "rocktimer" ] && priority=5
+            cat >> "${WPA_CONF}" << EOF
+
+network={
+    ssid="${ssid_name}"
+    psk="${psk_value}"
+    key_mgmt=WPA-PSK
+    priority=${priority}
+}
+EOF
+            echo "Added Wi-Fi network: ${ssid_name} (priority ${priority})"
+        else
+            echo "Wi-Fi network ${ssid_name} already configured"
+        fi
+    done
+    wpa_cli -i wlan0 reconfigure >/dev/null 2>&1 || true
+elif [[ "${configure_wifi}" =~ ^[Yy]$ ]]; then
+    echo "WARNING: ${WPA_CONF} not found; skipping Wi-Fi config"
+else
+    echo "Skipping Wi-Fi configuration."
+fi
+
+echo "[4c/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"
 CHRONY_MARKER_BEGIN="# StoneTimer chrony begin"
 CHRONY_MARKER_END="# StoneTimer chrony end"

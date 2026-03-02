@@ -110,12 +110,18 @@ Configure Wi-Fi to connect to Pi 4:
 sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 ```
 
-Add:
+Add both networks (the old name `rocktimer` is kept so the Pi Zero stays
+connected during migration — remove it once all devices are updated):
 ```
 network={
     ssid="stonetimer"
     psk="stonetimer"
     priority=10
+}
+network={
+    ssid="rocktimer"
+    psk="rocktimer"
+    priority=5
 }
 ```
 

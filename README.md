@@ -823,9 +823,15 @@ sudo systemctl restart hostapd
 
 # 5. Verify Pi Zero Wi-Fi config
 # On Pi Zero, edit /etc/wpa_supplicant/wpa_supplicant.conf
+# Both SSIDs so the Pi Zero works during migration from rocktimer -> stonetimer
 network={
     ssid="stonetimer"
     psk="stonetimer"
+    key_mgmt=WPA-PSK
+}
+network={
+    ssid="rocktimer"
+    psk="rocktimer"
     key_mgmt=WPA-PSK
 }
 ```

@@ -135,6 +135,7 @@ class StoneTimerServer:
     State machine:
         IDLE → ARMED (via arm button or IR sensor)
         ARMED → MEASURING (on first trigger)
+        MEASURING → ARMED (via rearm — e.g. accidental trigger)
         MEASURING → COMPLETED (on hog_close trigger)
         COMPLETED → ARMED (via rearm/arm)
         COMPLETED → IDLE (via disarm)
@@ -545,15 +546,13 @@ class StoneTimerServer:
         except Exception as e:
             logger.error(f"TTS error: {e}")
     
-    def arm(self, force: bool = False):
+    def arm(self):
         """Arm the system.
 
-        Normal behavior: only allow IDLE/COMPLETED -> ARMED.
-        If force=True, also allow MEASURING -> ARMED (used by auto-rearm timeout).
+        Allowed from IDLE, COMPLETED, or MEASURING (e.g. accidental trigger).
         """
-        if not force and self.state not in [SystemState.IDLE, SystemState.COMPLETED]:
-            return False
-        if force and self.state not in [SystemState.IDLE, SystemState.COMPLETED, SystemState.MEASURING]:
+        allowed = [SystemState.IDLE, SystemState.COMPLETED, SystemState.MEASURING]
+        if self.state not in allowed:
             return False
         
         self.session.reset()
@@ -613,7 +612,7 @@ class StoneTimerServer:
         if self.state not in (SystemState.MEASURING, SystemState.COMPLETED):
             return
         logger.info(f"Auto-rearm timeout: {after_s:.0f}s since first trigger, forcing ARMED")
-        self.arm(force=True)
+        self.arm()
 
     def _load_runtime_settings(self) -> None:
         """Load persisted settings overrides (best-effort)."""

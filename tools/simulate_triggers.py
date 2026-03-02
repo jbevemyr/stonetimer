@@ -32,7 +32,7 @@ HOG_HOG_MAX = 14.0
 
 
 def _load_server_from_config(config_path: Path) -> Optional[Tuple[str, int, int]]:
-    """Load (host, udp_port, http_port) from a RockTimer config.yaml if available."""
+    """Load (host, udp_port, http_port) from a StoneTimer config.yaml if available."""
     if yaml is None:
         return None
     if not config_path.exists():
@@ -53,7 +53,7 @@ def _load_server_from_config(config_path: Path) -> Optional[Tuple[str, int, int]
 
 
 def arm_server(server_host: str, http_port: int, timeout_s: float = 1.0) -> bool:
-    """Best-effort: ask the RockTimer server to arm (rearm) via HTTP."""
+    """Best-effort: ask the StoneTimer server to arm (rearm) via HTTP."""
     url = f"http://{server_host}:{http_port}/api/arm"
     req = urllib.request.Request(url, method="POST")
     try:
@@ -118,11 +118,11 @@ def simulate_stone_pass(sock, server_addr, delay_tee_hog: float = None, delay_ho
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Simulate RockTimer triggers via UDP")
+    parser = argparse.ArgumentParser(description="Simulate StoneTimer triggers via UDP")
     parser.add_argument("--server", default=None, help="Server IP/hostname (default: from config.yaml if found, else 192.168.50.1)")
     parser.add_argument("--port", type=int, default=None, help="Server UDP port (default: from config.yaml if found, else 5000)")
     parser.add_argument("--http-port", type=int, default=None, help="Server HTTP port (for /api/arm) (default: from config.yaml if found, else 8080)")
-    parser.add_argument("--config", default=None, help="Path to config.yaml (default: ./config.yaml, then /opt/rocktimer/config.yaml)")
+    parser.add_argument("--config", default=None, help="Path to config.yaml (default: ./config.yaml, then /opt/stonetimer/config.yaml)")
     parser.add_argument("--device", choices=["tee", "hog_close", "hog_far"], 
                        help="Send a single trigger")
     parser.add_argument("--simulate", action="store_true", help="Simulate a full stone pass")
@@ -144,7 +144,7 @@ def main():
     if args.config:
         config_candidates.append(Path(args.config))
     else:
-        config_candidates.extend([Path("config.yaml"), Path("/opt/rocktimer/config.yaml")])
+        config_candidates.extend([Path("config.yaml"), Path("/opt/stonetimer/config.yaml")])
 
     cfg_resolved = None
     for p in config_candidates:

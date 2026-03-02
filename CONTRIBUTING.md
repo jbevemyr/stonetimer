@@ -24,7 +24,7 @@ Thank you for your interest in contributing to Stone Timer! This document provid
 - Include steps to reproduce
 - Add logs if relevant:
   ```bash
-  sudo journalctl -u rocktimer-server -n 100
+  sudo journalctl -u stonetimer-server -n 100
   ```
 - Specify hardware (Pi model, sensors, display)
 - Include config.yaml (remove sensitive data)
@@ -46,7 +46,7 @@ Steps to reproduce:
 Environment:
 - Pi Zero 2 W (Raspberry Pi OS Bookworm 64-bit)
 - Server: Pi 4 (192.168.50.1)
-- Network: Connected to rocktimer Wi-Fi
+- Network: Connected to stonetimer Wi-Fi
 - Sensor logs: See attached
 ```
 
@@ -88,8 +88,8 @@ Implementation notes:
 ```bash
 # Fork the repo on GitHub
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/rocktimer.git
-cd rocktimer
+git clone https://github.com/YOUR_USERNAME/stonetimer.git
+cd stonetimer
 
 # Create a branch
 git checkout -b feature/your-feature-name
@@ -150,7 +150,7 @@ def calc(a, b):  # No docstring, unclear names
 1. **Test locally:**
    ```bash
    # Server
-   cd /opt/rocktimer
+   cd /opt/stonetimer
    sudo venv/bin/python server/main.py
    
    # Simulate triggers
@@ -164,7 +164,7 @@ def calc(a, b):  # No docstring, unclear names
 
 3. **Check logs for errors:**
    ```bash
-   sudo journalctl -u rocktimer-server -n 100 --no-pager
+   sudo journalctl -u stonetimer-server -n 100 --no-pager
    ```
 
 4. **Test edge cases:**

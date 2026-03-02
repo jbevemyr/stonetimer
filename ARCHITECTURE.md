@@ -73,7 +73,7 @@ This document describes the technical architecture of Stone Timer.
    - History tracking
    - TTS integration
 
-2. **Kiosk Mode** (`rocktimer-kiosk.service`)
+2. **Kiosk Mode** (`stonetimer-kiosk.service`)
    - Chromium in fullscreen
    - Auto-start on boot
    - Touch-optimized
@@ -188,8 +188,8 @@ This document describes the technical architecture of Stone Timer.
 │       └────────────────┴───────────────┘                  │
 │                        │                                  │
 │                     wlan0                                 │
-│                   SSID: rocktimer                         │
-│                   PSK: rocktimer                          │
+│                   SSID: stonetimer                         │
+│                   PSK: stonetimer                          │
 └────────────────────────┬──────────────────────────────────┘
                          │
           ┌──────────────┴──────────────┬─────────────────┐
@@ -202,10 +202,10 @@ This document describes the technical architecture of Stone Timer.
 ```
 
 **Services:**
-- **hostapd:** Creates "rocktimer" Wi-Fi network
+- **hostapd:** Creates "stonetimer" Wi-Fi network
 - **dnsmasq:** 
   - DHCP: assigns 192.168.50.10-100
-  - DNS: resolves "rocktimer" → 192.168.50.1
+  - DNS: resolves "stonetimer" → 192.168.50.1
 - **chrony:** Time synchronization (critical for accurate timing)
 
 ### Time Synchronization
@@ -298,7 +298,7 @@ chronyc sources -v  # View time sources
 ## File Structure
 
 ```
-rocktimer/
+stonetimer/
 ├── server/
 │   ├── main.py              # FastAPI server (Pi 4)
 │   └── static/
@@ -318,7 +318,7 @@ rocktimer/
 ├── tools/
 │   ├── simulate_triggers.py # UDP trigger simulator
 │   └── test_sensor.py       # GPIO sensor test
-├── RockTimer/               # iOS + Apple Watch companion (Xcode)
+├── StoneTimer/               # iOS + Apple Watch companion (Xcode)
 ├── install_server.sh        # Pi 4 installer
 ├── install_sensor.sh        # Pi Zero installer
 ├── config.yaml.example      # Configuration template
@@ -333,29 +333,29 @@ rocktimer/
 
 ### Server (Pi 4)
 
-**`/etc/systemd/system/rocktimer-server.service`**
-- Runs: `/opt/rocktimer/venv/bin/python /opt/rocktimer/server/main.py`
+**`/etc/systemd/system/stonetimer-server.service`**
+- Runs: `/opt/stonetimer/venv/bin/python /opt/stonetimer/server/main.py`
 - User: root (required for GPIO)
 - Restart: always
-- Logs: `journalctl -u rocktimer-server`
+- Logs: `journalctl -u stonetimer-server`
 
-**`/etc/systemd/system/rocktimer-kiosk.service`**
+**`/etc/systemd/system/stonetimer-kiosk.service`**
 - Runs: Chromium in kiosk mode
 - User: pi (regular user, for X11 access)
-- After: graphical.target, rocktimer-server.service
+- After: graphical.target, stonetimer-server.service
 - Restart: always
 
 ### Sensor (Pi Zero)
 
-**`/etc/systemd/system/rocktimer-sensor.service`**
-- Runs: `/opt/rocktimer/venv/bin/python /opt/rocktimer/sensor/sensor_daemon.py`
+**`/etc/systemd/system/stonetimer-sensor.service`**
+- Runs: `/opt/stonetimer/venv/bin/python /opt/stonetimer/sensor/sensor_daemon.py`
 - User: root (required for GPIO)
 - Restart: always
-- Logs: `journalctl -u rocktimer-sensor`
+- Logs: `journalctl -u stonetimer-sensor`
 
 ## Configuration Files
 
-### `/opt/rocktimer/config.yaml`
+### `/opt/stonetimer/config.yaml`
 
 **Used by:** Both server and sensor daemons
 
@@ -386,7 +386,7 @@ server:
 
 **Key features:**
 - DHCP range: 192.168.50.10-100
-- DNS: "rocktimer" → 192.168.50.1
+- DNS: "stonetimer" → 192.168.50.1
 - Captive portal bypass (for phones)
 
 ### `/etc/chrony/chrony.conf`
@@ -444,7 +444,7 @@ makestep 1.0 3
 
 ### Wi-Fi Network
 
-- **Default password:** "rocktimer" (change in setup script)
+- **Default password:** "stonetimer" (change in setup script)
 - **WPA2-PSK encryption**
 - **No internet gateway** (isolated network)
 
@@ -465,8 +465,8 @@ makestep 1.0 3
 ### Alternative Displays
 
 Replace touchscreen with:
-- **Phone/tablet:** Connect to rocktimer Wi-Fi, open browser
-- **Apple Watch:** Use companion app (see `RockTimer/`)
+- **Phone/tablet:** Connect to stonetimer Wi-Fi, open browser
+- **Apple Watch:** Use companion app (see `StoneTimer/`)
 
 ## Testing
 
@@ -501,7 +501,7 @@ python tools/simulate_triggers.py --simulate --tee-hog 3.5 --hog-hog 15.0
 
 **Sensor test (on each Pi):**
 ```bash
-sudo python /opt/rocktimer/tools/test_sensor.py
+sudo python /opt/stonetimer/tools/test_sensor.py
 ```
 
 **Time sync test:**
@@ -517,16 +517,16 @@ chronyc tracking | grep "System time"
 
 ```bash
 # Server
-sudo journalctl -u rocktimer-server -f
+sudo journalctl -u stonetimer-server -f
 
 # Sensor
-sudo journalctl -u rocktimer-sensor -f
+sudo journalctl -u stonetimer-sensor -f
 
 # Kiosk
-sudo journalctl -u rocktimer-kiosk -f
+sudo journalctl -u stonetimer-kiosk -f
 
 # TTS
-tail -f /var/log/rocktimer-tts.log
+tail -f /var/log/stonetimer-tts.log
 ```
 
 ### Network Debugging
@@ -552,7 +552,7 @@ sudo tcpdump -i wlan0 -n port 5000
 
 ```bash
 # Test GPIO (manual trigger)
-sudo python /opt/rocktimer/tools/test_sensor.py
+sudo python /opt/stonetimer/tools/test_sensor.py
 
 # Check GPIO state
 gpio readall  # If gpio command is installed

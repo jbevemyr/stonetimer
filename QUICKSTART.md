@@ -24,7 +24,7 @@ This guide will get you from zero to a working Stone Timer system in ~3 hours.
    - Pi 4: Desktop version
    - 2× Pi Zero: Lite version
    - Enable SSH during imaging (in Imager settings)
-   - Set username/password (e.g., pi/rocktimer)
+   - Set username/password (e.g., pi/stonetimer)
 
 3. **Initial boot and SSH access**
    ```bash
@@ -48,8 +48,8 @@ This guide will get you from zero to a working Stone Timer system in ~3 hours.
 sudo apt-get install -y git
 
 # Clone repository
-git clone https://github.com/jbevemyr/rocktimer.git
-cd rocktimer
+git clone https://github.com/jbevemyr/stonetimer.git
+cd stonetimer
 
 # Run installer (sets up server + kiosk + Wi-Fi AP + time sync)
 sudo ./install_server.sh
@@ -59,12 +59,12 @@ sudo ./install_server.sh
 # Answer "Y" when asked about chrony
 
 # Start services now (optional, but recommended so you can verify everything works)
-sudo systemctl start rocktimer-server
+sudo systemctl start stonetimer-server
 
 # Enable + start kiosk mode (recommended if using a Pi 4 touchscreen)
 # "enable" makes it start automatically on boot.
-sudo systemctl enable rocktimer-kiosk
-sudo systemctl start rocktimer-kiosk
+sudo systemctl enable stonetimer-kiosk
+sudo systemctl start stonetimer-kiosk
 
 # Optional: add a boot splash screen (Plymouth)
 # Reboot is required to see it.
@@ -74,7 +74,7 @@ sudo ./setup/setup_splash.sh
 sudo ./setup/setup_network.sh
 # Note: this also enables internet sharing (NAT) by default so Pi Zero clients can reach the internet
 # via the Pi 4 uplink (typically eth0). To disable:
-# sudo ROCKTIMER_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
+# sudo STONETIMER_ENABLE_INTERNET_SHARING=0 ./setup/setup_network.sh
 
 # Quick verification (no reboot needed just to test):
 # ip -brief addr show wlan0   # should show 192.168.50.1/24
@@ -85,19 +85,19 @@ sudo reboot
 ```
 
 After reboot:
-- Pi 4 should create Wi-Fi network "rocktimer" (password: "rocktimer")
+- Pi 4 should create Wi-Fi network "stonetimer" (password: "stonetimer")
 - Pi 4 IP should be 192.168.50.1
 
 #### Pi Zero #1 (Tee sensor)
 
 ```bash
 # Connect Pi Zero to your regular Wi-Fi first (for installation)
-# After setup, configure it to connect to "rocktimer" Wi-Fi
+# After setup, configure it to connect to "stonetimer" Wi-Fi
 
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/rocktimer.git
-cd rocktimer
+git clone https://github.com/jbevemyr/stonetimer.git
+cd stonetimer
 
 # Run installer and select "tee" when prompted
 sudo ./install_sensor.sh
@@ -113,8 +113,8 @@ sudo nano /etc/wpa_supplicant/wpa_supplicant.conf
 Add:
 ```
 network={
-    ssid="rocktimer"
-    psk="rocktimer"
+    ssid="stonetimer"
+    psk="stonetimer"
     priority=10
 }
 ```
@@ -168,20 +168,20 @@ Each LM393 module has a potentiometer:
 
 **On Pi 4:**
 ```bash
-# SSH to Pi 4 (connect to rocktimer Wi-Fi, then ssh pi@192.168.50.1)
-systemctl status rocktimer-server --no-pager
-systemctl status rocktimer-kiosk --no-pager
+# SSH to Pi 4 (connect to stonetimer Wi-Fi, then ssh pi@192.168.50.1)
+systemctl status stonetimer-server --no-pager
+systemctl status stonetimer-kiosk --no-pager
 ```
 
 **On each Pi Zero:**
 ```bash
 # SSH to Pi Zero via Pi 4 (find IP: sudo nmap -sn 192.168.50.0/24)
-systemctl status rocktimer-sensor --no-pager
+systemctl status stonetimer-sensor --no-pager
 ```
 
 #### 2. Test web UI
 
-On your phone/laptop, connect to "rocktimer" Wi-Fi and open:
+On your phone/laptop, connect to "stonetimer" Wi-Fi and open:
 - http://192.168.50.1:8080
 
 You should see the Stone Timer interface with two time cards.
@@ -196,7 +196,7 @@ In the top bar of the UI you will see small dots for the remote sensors (Tee / H
 
 **On each Pi Zero:**
 ```bash
-sudo journalctl -u rocktimer-sensor -f
+sudo journalctl -u stonetimer-sensor -f
 ```
 
 Block the laser beam - you should see:
@@ -206,7 +206,7 @@ TRIGGER! tee
 
 **On Pi 4, check server receives triggers:**
 ```bash
-sudo journalctl -u rocktimer-server -f
+sudo journalctl -u stonetimer-server -f
 ```
 
 When you break a beam, you should see:
@@ -217,7 +217,7 @@ Trigger: tee (or hog_close, or hog_far)
 #### 4. Simulate a stone pass
 
 ```bash
-cd /opt/rocktimer
+cd /opt/stonetimer
 python tools/simulate_triggers.py --simulate
 ```
 
@@ -260,11 +260,11 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 ### "No triggers detected"
 
 1. Check sensor wiring (especially ground!)
-2. Test sensor: `sudo python /opt/rocktimer/tools/test_sensor.py`
+2. Test sensor: `sudo python /opt/stonetimer/tools/test_sensor.py`
 3. Verify laser is hitting sensor (sensor LED should light up)
-4. Check logs: `sudo journalctl -u rocktimer-sensor -f`
+4. Check logs: `sudo journalctl -u stonetimer-sensor -f`
 
-### "Can't connect to rocktimer Wi-Fi"
+### "Can't connect to stonetimer Wi-Fi"
 
 1. Check hostapd: `sudo systemctl status hostapd`
 2. Verify IP: `ip addr show wlan0` (should be 192.168.50.1)
@@ -274,7 +274,7 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 
 1. Hard refresh: Ctrl+Shift+R (Chrome) or Ctrl+F5 (Firefox)
 2. Check WebSocket in browser console (F12)
-3. Restart server: `sudo systemctl restart rocktimer-server`
+3. Restart server: `sudo systemctl restart stonetimer-server`
 
 ### "Times are wildly wrong"
 
@@ -286,14 +286,14 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 
 - **Voice announcements:** Enable in Settings (⚙️ icon in web UI)
   - Wire speaker to Pi 4 (see audio diagram in README)
-- **Customize:** Edit `/opt/rocktimer/config.yaml`
-- **Apple Watch / iOS:** Build companion app from `RockTimer/` directory (Xcode)
+- **Customize:** Edit `/opt/stonetimer/config.yaml`
+- **Apple Watch / iOS:** Build companion app from `StoneTimer/` directory (Xcode)
 - **Enclosures:** 3D print cases to protect Pi units on ice
 
 ## Support
 
 - Full documentation: See README.md
-- Issues: https://github.com/jbevemyr/rocktimer/issues
+- Issues: https://github.com/jbevemyr/stonetimer/issues
 - Hardware details: See "Hardware" section in README.md
 
 ## Maintenance
@@ -307,10 +307,10 @@ This sends fake triggers in sequence. Check the web UI - it should show times.
 ### Software updates
 
 ```bash
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo git pull
 sudo ./install_server.sh  # or install_sensor.sh
-sudo systemctl restart rocktimer-server  # or rocktimer-sensor
+sudo systemctl restart stonetimer-server  # or stonetimer-sensor
 ```
 
 ### Cleaning

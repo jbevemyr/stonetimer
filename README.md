@@ -68,8 +68,8 @@ Below are the “from zero” steps for a brand new Raspberry Pi OS installation
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/rocktimer.git
-cd rocktimer
+git clone https://github.com/jbevemyr/stonetimer.git
+cd stonetimer
 
 # Installs server + kiosk (Chromium fullscreen) + dependencies
 sudo ./install_server.sh
@@ -84,13 +84,13 @@ sudo reboot
 
 After reboot:
 - The server IP is typically **`192.168.50.1`**
-- Web UI: **`http://192.168.50.1:8080`** (or `http://rocktimer` if you also set up DNS/port 80)
+- Web UI: **`http://192.168.50.1:8080`** (or `http://stonetimer` if you also set up DNS/port 80)
 
 **3) Start / check status**
 
 ```bash
-sudo systemctl enable --now rocktimer-server.service rocktimer-kiosk.service
-systemctl status rocktimer-server.service rocktimer-kiosk.service --no-pager
+sudo systemctl enable --now stonetimer-server.service stonetimer-kiosk.service
+systemctl status stonetimer-server.service stonetimer-kiosk.service --no-pager
 ```
 
 **4) (Optional) Chrony from the installer**
@@ -98,14 +98,14 @@ systemctl status rocktimer-server.service rocktimer-kiosk.service --no-pager
 To skip prompts:
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```
 
 ### Pi Zero 2 W (Sensor: tee or hog_far)
 
 **Prerequisites**
 - Raspberry Pi OS installed
-- Wi‑Fi preconfigured to join the RockTimer SSID (default `rocktimer`)
+- Wi‑Fi preconfigured to join the StoneTimer SSID (default `stonetimer`)
 - SSH enabled (so you can run the installer remotely)
 
 **1) Clone and install**
@@ -113,8 +113,8 @@ sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```bash
 sudo apt-get update
 sudo apt-get install -y git
-git clone https://github.com/jbevemyr/rocktimer.git
-cd rocktimer
+git clone https://github.com/jbevemyr/stonetimer.git
+cd stonetimer
 
 # Choose tee or hog_far when prompted
 sudo ./install_sensor.sh
@@ -122,21 +122,21 @@ sudo ./install_sensor.sh
 
 **2) Point the sensor at the Pi 4**
 
-Verify in `/opt/rocktimer/config.yaml` that the server points to the Pi 4:
+Verify in `/opt/stonetimer/config.yaml` that the server points to the Pi 4:
 
 - `host: "192.168.50.1"`
 
 **3) Start / check status**
 
 ```bash
-sudo systemctl enable --now rocktimer-sensor.service
-systemctl status rocktimer-sensor.service --no-pager
+sudo systemctl enable --now stonetimer-sensor.service
+systemctl status stonetimer-sensor.service --no-pager
 ```
 
 **4) (Optional) Chrony from the installer**
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 STONETIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
 ## Network (Pi 4 as Wi‑Fi Access Point)
@@ -153,7 +153,7 @@ sudo ./setup/setup_network.sh
 ```
 
 After running it:
-- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `rocktimer`)
+- Connect your **Pi Zero 2 W** devices to the SSID shown by the script (default `stonetimer`)
 - Verify they get an IP in the `192.168.50.x` range
 - Ensure the server IP in the sensor config is set to the Pi 4 address (e.g. `192.168.50.1`)
 
@@ -170,16 +170,16 @@ This lets you view live times from your phone and press **Rearm** without using 
 The touchscreen is optional. You can build Stone Timer without a display and rely on:
 
 - A **phone/tablet** connected to the Stone Timer Wi‑Fi network
-- An **Apple Watch / iOS** companion app (see `RockTimer/`)
+- An **Apple Watch / iOS** companion app (see `StoneTimer/`)
 - Any **laptop/desktop** on the same Wi‑Fi network using a web browser
 
-### Local hostname: http://rocktimer
+### Local hostname: http://stonetimer
 
 If you use the provided Wi‑Fi AP setup, dnsmasq can be configured to resolve:
 
-- `rocktimer` → `192.168.50.1`
+- `stonetimer` → `192.168.50.1`
 
-So you can type `http://rocktimer` in your browser.
+So you can type `http://stonetimer` in your browser.
 
 Note: Stone Timer itself runs on **port 8080** by default. If you want plain port **80**,
 use the optional Nginx reverse proxy setup:
@@ -229,7 +229,7 @@ This uses Plymouth and generates a simple image-based splash (curling stone + te
 
 ### Apple Watch & iOS
 
-The repository also contains an iOS and Apple Watch companion app under `RockTimer/` (Xcode project). It displays RockTimer times and supports arm/rearm from phone or watch.
+The repository also contains an iOS and Apple Watch companion app under `StoneTimer/` (Xcode project). It displays StoneTimer times and supports arm/rearm from phone or watch.
 
 ## Time sync (Chrony)
 
@@ -243,19 +243,19 @@ Both install scripts can optionally configure chrony for you (idempotent: re-run
 - **Pi 4 (server)**:
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ./install_server.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 ./install_server.sh
 ```
 
 Optional overrides:
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_CIDR=192.168.50.0/24 ./install_server.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 STONETIMER_CHRONY_CIDR=192.168.50.0/24 ./install_server.sh
 ```
 
 - **Pi Zero 2 W (sensor/client)**:
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 STONETIMER_CHRONY_SERVER=192.168.50.1 ./install_sensor.sh
 ```
 
 #### Faster “correct time” after long power-off (makestep)
@@ -269,10 +269,10 @@ Meaning: if the clock differs by more than **1 second**, chrony is allowed to **
 You can change this:
 
 ```bash
-sudo ROCKTIMER_CONFIGURE_CHRONY=1 ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD=0.5 ROCKTIMER_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
+sudo STONETIMER_CONFIGURE_CHRONY=1 STONETIMER_CHRONY_MAKESTEP_THRESHOLD=0.5 STONETIMER_CHRONY_MAKESTEP_LIMIT=5 ./install_sensor.sh
 ```
 
-If you don't set `ROCKTIMER_CONFIGURE_CHRONY`, the installer will prompt you.
+If you don't set `STONETIMER_CONFIGURE_CHRONY`, the installer will prompt you.
 
 ### 1) Install chrony
 
@@ -348,22 +348,22 @@ sudo ./install_sensor.sh
 
 ## Updating / Upgrading
 
-Stone Timer is installed to **`/opt/rocktimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
+Stone Timer is installed to **`/opt/stonetimer`** and runs via systemd services. You can safely re-run the installers to apply updates.
 
 ### Recommended update flow (Pi 4 + Pi Zero)
 
 1) **Backup your config**
 
 ```bash
-sudo cp -a /opt/rocktimer/config.yaml /opt/rocktimer/config.yaml.bak.$(date -Is)
+sudo cp -a /opt/stonetimer/config.yaml /opt/stonetimer/config.yaml.bak.$(date -Is)
 ```
 
 2) **Update code**
 
-If `/opt/rocktimer` contains a git checkout (it usually does after installation):
+If `/opt/stonetimer` contains a git checkout (it usually does after installation):
 
 ```bash
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo git pull
 ```
 
@@ -374,17 +374,17 @@ Otherwise, pull updates on your laptop and re-run the installer from the cloned 
 - Pi 4:
 
 ```bash
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo ./install_server.sh
-sudo systemctl restart rocktimer-server.service
+sudo systemctl restart stonetimer-server.service
 ```
 
 - Pi Zero:
 
 ```bash
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo ./install_sensor.sh
-sudo systemctl restart rocktimer-sensor.service
+sudo systemctl restart stonetimer-sensor.service
 ```
 
 ## Configuration
@@ -551,11 +551,11 @@ DO  (digital out)     →    Pin 13 (GPIO 27)
 ### Bring-up checklist (first successful run)
 
 - **Server up**:
-  - `systemctl status rocktimer-server.service --no-pager`
+  - `systemctl status stonetimer-server.service --no-pager`
   - Open UI: `http://<pi4-ip>:8080`
 - **Sensors up**:
-  - `systemctl status rocktimer-sensor.service --no-pager`
-  - Watch logs while breaking the beam: `sudo journalctl -u rocktimer-sensor -f`
+  - `systemctl status stonetimer-sensor.service --no-pager`
+  - Watch logs while breaking the beam: `sudo journalctl -u stonetimer-sensor -f`
 - **End-to-end test without hardware (UDP simulation)**:
 
 ```bash
@@ -580,20 +580,20 @@ It also caches a few short phrases (e.g. `ready to go`) so they play without mod
 To force the fast path, set:
 
 ```bash
-ROCKTIMER_TTS_FAST=1
+STONETIMER_TTS_FAST=1
 ```
 
 You can also tune Piper speech speed and the pause between digits:
 
 ```bash
 # Faster speech (lower is faster). Default: 0.75
-ROCKTIMER_PIPER_LENGTH_SCALE=0.75
+STONETIMER_PIPER_LENGTH_SCALE=0.75
 
 # Silence after each sentence (seconds). Default: 0.0
-ROCKTIMER_PIPER_SENTENCE_SILENCE=0.0
+STONETIMER_PIPER_SENTENCE_SILENCE=0.0
 
 # Pause between tokens in the stitched digit callouts (ms). Default: 20
-ROCKTIMER_TTS_TOKEN_PAUSE_MS=20
+STONETIMER_TTS_TOKEN_PAUSE_MS=20
 ```
 
 **Parts:**
@@ -679,20 +679,20 @@ sudo python tools/test_sensor.py
 
 ### Server won't start
 
-**Symptoms:** `systemctl status rocktimer-server` shows failed/error
+**Symptoms:** `systemctl status stonetimer-server` shows failed/error
 
 **Solutions:**
 ```bash
 # Check logs for error details
-sudo journalctl -u rocktimer-server -n 50
+sudo journalctl -u stonetimer-server -n 50
 
 # Common issues:
 # 1. Port 8080 already in use - change http_port in config.yaml
-# 2. Config file missing or invalid - verify /opt/rocktimer/config.yaml exists
+# 2. Config file missing or invalid - verify /opt/stonetimer/config.yaml exists
 # 3. Python dependencies missing - re-run install_server.sh
 
 # Test server manually to see errors directly
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo venv/bin/python server/main.py
 ```
 
@@ -703,7 +703,7 @@ sudo venv/bin/python server/main.py
 **Solutions:**
 ```bash
 # 1. Test the sensor locally (on the Pi with the sensor)
-sudo python /opt/rocktimer/tools/test_sensor.py
+sudo python /opt/stonetimer/tools/test_sensor.py
 # This should print "TRIGGER!" when you break the beam
 
 # 2. Check sensor wiring
@@ -712,7 +712,7 @@ sudo python /opt/rocktimer/tools/test_sensor.py
 # - DO → GPIO 17
 
 # 3. Verify sensor logs
-sudo journalctl -u rocktimer-sensor -f
+sudo journalctl -u stonetimer-sensor -f
 # You should see "TRIGGER! tee" (or hog_far) when breaking beam
 
 # 4. Check network connectivity (for Pi Zero sensors)
@@ -740,7 +740,7 @@ sudo amixer cset numid=3 1
 sudo /opt/piper/speak.sh "ready to go"
 
 # 5. Check TTS logs
-sudo tail -f /var/log/rocktimer-tts.log
+sudo tail -f /var/log/stonetimer-tts.log
 
 # 6. Verify speaker wiring (see audio diagram in Hardware section)
 ```
@@ -752,7 +752,7 @@ sudo tail -f /var/log/rocktimer-tts.log
 **Solutions:**
 ```bash
 # 1. Check if kiosk service is running
-systemctl status rocktimer-kiosk
+systemctl status stonetimer-kiosk
 
 # 2. Test touch in terminal
 # Install evtest: sudo apt-get install evtest
@@ -765,7 +765,7 @@ sudo evtest
 # Reboot after editing
 
 # 4. Manual test (stop kiosk first)
-sudo systemctl stop rocktimer-kiosk
+sudo systemctl stop stonetimer-kiosk
 export DISPLAY=:0
 chromium --kiosk http://localhost:8080
 ```
@@ -798,7 +798,7 @@ sudo systemctl restart chrony
 
 ### Network issues (Pi 4 as AP)
 
-**Symptoms:** Pi Zero can't connect to rocktimer Wi-Fi
+**Symptoms:** Pi Zero can't connect to stonetimer Wi-Fi
 
 **Solutions:**
 ```bash
@@ -824,8 +824,8 @@ sudo systemctl restart hostapd
 # 5. Verify Pi Zero Wi-Fi config
 # On Pi Zero, edit /etc/wpa_supplicant/wpa_supplicant.conf
 network={
-    ssid="rocktimer"
-    psk="rocktimer"
+    ssid="stonetimer"
+    psk="stonetimer"
     key_mgmt=WPA-PSK
 }
 ```
@@ -847,7 +847,7 @@ network={
 # Settings → Privacy → Clear browsing data
 
 # 4. Test from different device
-# Connect phone to rocktimer Wi-Fi
+# Connect phone to stonetimer Wi-Fi
 # Open: http://192.168.50.1:8080
 ```
 
@@ -855,20 +855,20 @@ network={
 
 ```bash
 # View all logs
-sudo journalctl -u rocktimer-server -f    # Server (Pi 4)
-sudo journalctl -u rocktimer-sensor -f    # Sensor (Pi Zero)
-sudo journalctl -u rocktimer-kiosk -f     # Kiosk display (Pi 4)
+sudo journalctl -u stonetimer-server -f    # Server (Pi 4)
+sudo journalctl -u stonetimer-sensor -f    # Sensor (Pi Zero)
+sudo journalctl -u stonetimer-kiosk -f     # Kiosk display (Pi 4)
 
 # Check system resources
 htop
 
 # Verify Python dependencies
-cd /opt/rocktimer
+cd /opt/stonetimer
 source venv/bin/activate
 pip list
 
 # Full reinstall (last resort)
-cd /opt/rocktimer
+cd /opt/stonetimer
 sudo ./install_server.sh  # or install_sensor.sh
 ```
 

@@ -1,5 +1,5 @@
 #
-# RockTimer configuration (example)
+# StoneTimer configuration (example)
 #
 # device_id:
 # - tee       (Pi Zero @ tee/back line)
@@ -44,7 +44,7 @@ server:
     speak_hog_hog: true
 
   # Debug: log TTS spawns (optional)
-  # tts_debug_log: "/var/log/rocktimer-tts-spawn.log"
+  # tts_debug_log: "/var/log/stonetimer-tts-spawn.log"
 
 # Optional/advanced (currently not used by the code, kept for future):
 # max_history: 100

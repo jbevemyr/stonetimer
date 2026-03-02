@@ -1,10 +1,10 @@
 #!/bin/bash
-# Install RockTimer Sensor on Raspberry Pi Zero 2 W
+# Install StoneTimer Sensor on Raspberry Pi Zero 2 W
 
 set -e
 
 echo "==================================="
-echo "RockTimer Sensor Installation"
+echo "StoneTimer Sensor Installation"
 echo "==================================="
 
 # Ensure we run as root
@@ -14,7 +14,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Install path
-INSTALL_DIR="/opt/rocktimer"
+INSTALL_DIR="/opt/stonetimer"
 USER="${SUDO_USER:-$(whoami)}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -67,8 +67,8 @@ apt-get install -y \
 echo "[2/5] Creating install directory..."
 mkdir -p "${INSTALL_DIR}"
 
-# Copy source into /opt/rocktimer (safe to re-run).
-# If the script is already running from /opt/rocktimer, do NOT copy recursively into itself.
+# Copy source into /opt/stonetimer (safe to re-run).
+# If the script is already running from /opt/stonetimer, do NOT copy recursively into itself.
 if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
     echo "Copying files to ${INSTALL_DIR}..."
     tar \
@@ -101,11 +101,11 @@ sed -i -E "s/^[[:space:]]*device_id:[[:space:]]*.*/device_id: \"${DEVICE_ID}\"/"
 
 echo "[4b/5] Optional: configuring time sync (chrony)..."
 CHRONY_CONF="/etc/chrony/chrony.conf"
-CHRONY_MARKER_BEGIN="# RockTimer chrony begin"
-CHRONY_MARKER_END="# RockTimer chrony end"
+CHRONY_MARKER_BEGIN="# StoneTimer chrony begin"
+CHRONY_MARKER_END="# StoneTimer chrony end"
 CHRONY_SERVER_DEFAULT="192.168.50.1"
-CHRONY_SERVER="${ROCKTIMER_CHRONY_SERVER:-${CHRONY_SERVER_DEFAULT}}"
-CONFIGURE_CHRONY="${ROCKTIMER_CONFIGURE_CHRONY:-}"
+CHRONY_SERVER="${STONETIMER_CHRONY_SERVER:-${CHRONY_SERVER_DEFAULT}}"
+CONFIGURE_CHRONY="${STONETIMER_CONFIGURE_CHRONY:-}"
 
 if [ "${CONFIGURE_CHRONY}" = "1" ]; then
     configure_chrony="y"
@@ -122,17 +122,17 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
     else
         CHRONY_MAKESTEP_THRESHOLD_DEFAULT="1.0"
         CHRONY_MAKESTEP_LIMIT_DEFAULT="3"
-        CHRONY_MAKESTEP_THRESHOLD="${ROCKTIMER_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
-        CHRONY_MAKESTEP_LIMIT="${ROCKTIMER_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
+        CHRONY_MAKESTEP_THRESHOLD="${STONETIMER_CHRONY_MAKESTEP_THRESHOLD:-${CHRONY_MAKESTEP_THRESHOLD_DEFAULT}}"
+        CHRONY_MAKESTEP_LIMIT="${STONETIMER_CHRONY_MAKESTEP_LIMIT:-${CHRONY_MAKESTEP_LIMIT_DEFAULT}}"
 
         # Allow interactive override unless env var is set
-        if [ -z "${ROCKTIMER_CHRONY_SERVER:-}" ]; then
+        if [ -z "${STONETIMER_CHRONY_SERVER:-}" ]; then
             read -r -p "Chrony server IP/hostname [${CHRONY_SERVER}]: " in_server
             CHRONY_SERVER="${in_server:-${CHRONY_SERVER}}"
         fi
 
         tmp="$(mktemp)"
-        # Remove any previous RockTimer chrony block
+        # Remove any previous StoneTimer chrony block
         awk -v b="${CHRONY_MARKER_BEGIN}" -v e="${CHRONY_MARKER_END}" '
           $0==b {skip=1; next}
           $0==e {skip=0; next}
@@ -144,7 +144,7 @@ if [[ "${configure_chrony}" =~ ^[Yy]$ ]]; then
         cat >> "${CHRONY_CONF}" << EOF
 
 ${CHRONY_MARKER_BEGIN}
-# Prefer RockTimer Pi 4 as time source
+# Prefer StoneTimer Pi 4 as time source
 server ${CHRONY_SERVER} iburst prefer
 # Allow stepping the clock at boot if offset is large (helps if devices were powered off for a long time)
 makestep ${CHRONY_MAKESTEP_THRESHOLD} ${CHRONY_MAKESTEP_LIMIT}
@@ -161,9 +161,9 @@ fi
 
 echo "[5/5] Installing systemd service..."
 
-cat > /etc/systemd/system/rocktimer-sensor.service << EOF
+cat > /etc/systemd/system/stonetimer-sensor.service << EOF
 [Unit]
-Description=RockTimer Sensor Daemon
+Description=StoneTimer Sensor Daemon
 After=network.target
 
 [Service]
@@ -180,7 +180,7 @@ WantedBy=multi-user.target
 EOF
 
 systemctl daemon-reload
-systemctl enable rocktimer-sensor.service
+systemctl enable stonetimer-sensor.service
 
 echo ""
 echo "==================================="
@@ -190,13 +190,13 @@ echo ""
 echo "Device ID: ${DEVICE_ID}"
 echo ""
 echo "Start the sensor:"
-echo "  sudo systemctl start rocktimer-sensor"
+echo "  sudo systemctl start stonetimer-sensor"
 echo ""
 echo "Check status:"
-echo "  sudo systemctl status rocktimer-sensor"
+echo "  sudo systemctl status stonetimer-sensor"
 echo ""
 echo "View logs:"
-echo "  sudo journalctl -u rocktimer-sensor -f"
+echo "  sudo journalctl -u stonetimer-sensor -f"
 echo ""
 echo "Edit configuration:"
 echo "  nano ${INSTALL_DIR}/config.yaml"

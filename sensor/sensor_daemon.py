@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RockTimer Sensor Daemon
+StoneTimer Sensor Daemon
 Runs on Pi Zero 2 W at the tee line and the far hog line.
 Monitors the light sensor and sends timestamps over UDP.
 """
@@ -35,7 +35,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger('rocktimer-sensor')
+logger = logging.getLogger('stonetimer-sensor')
 
 
 class SensorDaemon:

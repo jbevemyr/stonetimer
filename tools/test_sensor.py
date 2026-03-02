@@ -41,14 +41,14 @@ def on_trigger():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="RockTimer light sensor test (gpiozero)")
+    parser = argparse.ArgumentParser(description="StoneTimer light sensor test (gpiozero)")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH), help="Path to config.yaml")
     parser.add_argument("--pin", type=int, default=None, help="Override GPIO pin (BCM numbering)")
     parser.add_argument("--debounce-ms", type=int, default=None, help="Override debounce (ms)")
     args = parser.parse_args()
 
     print("=================================")
-    print("RockTimer Sensor Test")
+    print("StoneTimer Sensor Test")
     print("=================================")
     cfg = load_config(Path(args.config))
     cfg_gpio = (cfg.get("gpio") or {})

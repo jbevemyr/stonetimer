@@ -257,8 +257,8 @@ struct RearmButton: View {
             .foregroundColor(Color.text)
             .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .disabled(state.systemState == .measuring)
-        .opacity(state.systemState == .measuring ? 0.5 : 1)
+        .disabled(false)
+        .opacity(1)
     }
 }
 

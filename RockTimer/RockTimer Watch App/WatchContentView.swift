@@ -169,8 +169,8 @@ struct RearmButton: View {
         }
         .buttonStyle(.plain)
         .padding(8)
-        .disabled(state.systemState == .measuring)
-        .opacity(state.systemState == .measuring ? 0.5 : 1)
+        .disabled(false)
+        .opacity(1)
     }
 }
 

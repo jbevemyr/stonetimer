@@ -112,14 +112,16 @@ else
     configure_wifi="${configure_wifi:-y}"
 fi
 
-if [[ "${configure_wifi}" =~ ^[Yy]$ ]] && [ -f "${WPA_CONF}" ]; then
+if [[ "${configure_wifi}" =~ ^[Yy]$ ]]; then
     # Add stonetimer (primary) and rocktimer (fallback during migration)
-    for ssid_name in stonetimer rocktimer; do
-        if ! grep -q "ssid=\"${ssid_name}\"" "${WPA_CONF}" 2>/dev/null; then
-            psk_value="${ssid_name}"
-            priority=10
-            [ "${ssid_name}" = "rocktimer" ] && priority=5
-            cat >> "${WPA_CONF}" << EOF
+    if [ -f "${WPA_CONF}" ]; then
+        echo "Using wpa_supplicant"
+        for ssid_name in stonetimer rocktimer; do
+            if ! grep -q "ssid=\"${ssid_name}\"" "${WPA_CONF}" 2>/dev/null; then
+                psk_value="${ssid_name}"
+                priority=10
+                [ "${ssid_name}" = "rocktimer" ] && priority=5
+                cat >> "${WPA_CONF}" << EOF
 
 network={
     ssid="${ssid_name}"
@@ -128,14 +130,33 @@ network={
     priority=${priority}
 }
 EOF
-            echo "Added Wi-Fi network: ${ssid_name} (priority ${priority})"
-        else
-            echo "Wi-Fi network ${ssid_name} already configured"
-        fi
-    done
-    wpa_cli -i wlan0 reconfigure >/dev/null 2>&1 || true
-elif [[ "${configure_wifi}" =~ ^[Yy]$ ]]; then
-    echo "WARNING: ${WPA_CONF} not found; skipping Wi-Fi config"
+                echo "Added Wi-Fi network: ${ssid_name} (priority ${priority})"
+            else
+                echo "Wi-Fi network ${ssid_name} already configured (wpa_supplicant)"
+            fi
+        done
+        wpa_cli -i wlan0 reconfigure >/dev/null 2>&1 || true
+    elif command -v nmcli >/dev/null 2>&1; then
+        echo "Using NetworkManager"
+        for ssid_name in stonetimer rocktimer; do
+            if nmcli -t -f NAME connection show 2>/dev/null | grep -qx "${ssid_name}"; then
+                echo "Wi-Fi network ${ssid_name} already configured (NetworkManager)"
+            else
+                psk_value="${ssid_name}"
+                priority=10
+                [ "${ssid_name}" = "rocktimer" ] && priority=5
+                nmcli connection add type wifi ifname wlan0 con-name "${ssid_name}" \
+                    ssid "${ssid_name}" \
+                    wifi-sec.key-mgmt wpa-psk wifi-sec.psk "${psk_value}" \
+                    connection.autoconnect yes connection.autoconnect-priority "${priority}" \
+                    >/dev/null 2>&1
+                echo "Added Wi-Fi network: ${ssid_name} (priority ${priority})"
+            fi
+        done
+        nmcli device wifi rescan >/dev/null 2>&1 || true
+    else
+        echo "WARNING: Neither wpa_supplicant nor NetworkManager found; skipping Wi-Fi config"
+    fi
 else
     echo "Skipping Wi-Fi configuration."
 fi

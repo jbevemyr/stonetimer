@@ -57,7 +57,7 @@ chown -R "${USER}:${USER}" "${INSTALL_DIR}"
 
 echo "[3/5] Creating Python virtual environment..."
 cd ${INSTALL_DIR}
-python3 -m venv --system-site-packages venv
+python3 -m venv --clear --system-site-packages venv
 source venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements-server.txt

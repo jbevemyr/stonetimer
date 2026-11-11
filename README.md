@@ -643,8 +643,9 @@ sudo raspi-config
 # Or directly:
 amixer cset numid=3 1
 
-# IMPORTANT: the server runs as root (for GPIO), so test audio as root too:
-sudo aplay -D hw:0,0 /usr/share/sounds/alsa/Front_Center.wav
+# The server runs as the user who ran install_server.sh (with the gpio and audio
+# groups), so test audio as that user:
+aplay -D hw:0,0 /usr/share/sounds/alsa/Front_Center.wav
 
 # Test Piper (Coqui TTS via piper binary):
 # NOTE: ALSA card numbers can change across reboots, so avoid hardcoding plughw:X,Y unless you know the correct device.
@@ -730,8 +731,10 @@ echo '{"type":"trigger","device_id":"tee","timestamp_ns":1234567890}' | nc -u 19
 ```bash
 # 1. Check if speech is enabled in Settings (via web UI)
 
-# 2. Test audio output as root (server runs as root)
-sudo aplay /usr/share/sounds/alsa/Front_Center.wav
+# 2. Test audio output as the user the server runs as (the one who ran the installer)
+aplay /usr/share/sounds/alsa/Front_Center.wav
+# If it only works with sudo, reinstall with the server running as root:
+#   sudo STONETIMER_RUN_AS_ROOT=1 ./install_server.sh
 
 # 3. Force analog audio jack (if using Pi 4 headphone output)
 sudo amixer cset numid=3 1
@@ -822,18 +825,8 @@ sudo systemctl restart dnsmasq
 sudo systemctl restart hostapd
 
 # 5. Verify Pi Zero Wi-Fi config
-# On Pi Zero, edit /etc/wpa_supplicant/wpa_supplicant.conf
-# Both SSIDs so the Pi Zero works during migration from rocktimer -> stonetimer
-network={
-    ssid="stonetimer"
-    psk="stonetimer"
-    key_mgmt=WPA-PSK
-}
-network={
-    ssid="rocktimer"
-    psk="rocktimer"
-    key_mgmt=WPA-PSK
-}
+# On Pi Zero, check /etc/wpa_supplicant/wpa_supplicant.conf against the
+# network blocks in QUICKSTART.md ("Configure Wi-Fi to connect to Pi 4").
 ```
 
 ### Web UI shows old data or won't update
@@ -907,13 +900,46 @@ Get current status.
     "has_hog_close": true,
     "has_hog_far": true,
     "started_at": "2024-12-11T18:52:25.678901"
-  },
-  "sensors": {}
+  }
+}
+```
+
+### GET /api/sensors
+Sensor liveness and clock status. `clock_offset_ms` is estimated from heartbeats
+(server clock minus sensor clock, plus network delay); `clock_ok` is `false` when it
+exceeds `clock_skew_warn_ms`, which means times involving that sensor are unreliable.
+```json
+{
+  "timeout_s": 12.0,
+  "clock_skew_warn_ms": 25.0,
+  "sensors": [
+    {"device_id": "tee", "label": "Tee", "status": "online", "last_seen_s_ago": 1.3,
+     "ip": "192.168.50.11", "source": "heartbeat", "clock_offset_ms": 1.8, "clock_ok": true},
+    {"device_id": "hog_close", "label": "Hog near", "status": "local", "...": null},
+    {"device_id": "hog_far", "label": "Hog far", "status": "offline", "...": null}
+  ]
+}
+```
+
+### GET /api/settings, POST /api/settings
+Runtime settings (persisted in `runtime_settings.json`). POST accepts any subset of
+the fields; fields left out keep their value. `speech_enabled` controls the timer's
+own speaker only: voice in a browser or the iPhone app is a per-device switch.
+```json
+{
+  "speech_enabled": true,
+  "speak_ready": true,
+  "speak_tee_hog": true,
+  "speak_hog_hog": false,
+  "auto_rearm_enabled": false,
+  "auto_rearm_after_s": 120
 }
 ```
 
 ### GET /api/times
-Get history (latest measurements).
+Get history (latest measurements). The history is saved to `history.json` in the
+install directory and survives restarts. `DELETE /api/times/{id}` removes one
+record, `DELETE /api/times` (or `POST /api/clear`) removes all.
 ```json
 [
   {
@@ -939,9 +965,13 @@ Get current measurement (same as session in status).
 ```
 
 ### WebSocket /ws
-Real-time updates. Connect and receive `state_update` messages:
+Real-time updates. On connect the server sends one message of each type, then
+pushes a new one whenever that data changes:
 ```json
 {"type": "state_update", "data": {"state": "armed", "session": {...}}}
+{"type": "history", "data": [...]}      // same shape as GET /api/times
+{"type": "sensors", "data": {...}}      // same shape as GET /api/sensors
+{"type": "settings", "data": {...}}     // same shape as GET /api/settings
 ```
 
 Send commands:

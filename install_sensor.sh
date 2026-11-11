@@ -76,6 +76,9 @@ if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
         --exclude='./__pycache__' \
         --exclude='./.pytest_cache' \
         --exclude='./config.yaml' \
+        --exclude='./runtime_settings.json' \
+        --exclude='./history.json' \
+        --exclude='./.git' \
         -cf - -C "${SCRIPT_DIR}" . | tar -xpf - -C "${INSTALL_DIR}"
 else
     echo "NOTE: Running from ${INSTALL_DIR}; skipping copy step."
@@ -223,6 +226,20 @@ fi
 
 echo "[5/5] Installing systemd service..."
 
+# The daemon runs as the installing user rather than root; GPIO access comes
+# from the gpio group. Set STONETIMER_RUN_AS_ROOT=1 to keep running it as root.
+SERVICE_USER="${USER}"
+SERVICE_GROUPS_LINE=""
+if [ "${STONETIMER_RUN_AS_ROOT:-0}" = "1" ] || [ "${USER}" = "root" ]; then
+    SERVICE_USER="root"
+elif ! getent group gpio >/dev/null; then
+    echo "NOTE: no 'gpio' group on this system; running the sensor as root."
+    SERVICE_USER="root"
+else
+    SERVICE_GROUPS_LINE="SupplementaryGroups=gpio"
+fi
+echo "Sensor will run as: ${SERVICE_USER}"
+
 cat > /etc/systemd/system/stonetimer-sensor.service << EOF
 [Unit]
 Description=StoneTimer Sensor Daemon
@@ -230,7 +247,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=${SERVICE_USER}
+${SERVICE_GROUPS_LINE}
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 ExecStart=${INSTALL_DIR}/venv/bin/python ${INSTALL_DIR}/sensor/sensor_daemon.py

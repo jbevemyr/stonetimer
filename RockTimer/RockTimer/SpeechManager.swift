@@ -11,6 +11,10 @@ import Combine
 
 @MainActor
 final class SpeechManager: ObservableObject {
+    /// UserDefaults key for "read times on this iPhone". This is a per-device choice,
+    /// separate from the server's speech_enabled (the timer's own speaker).
+    static let enabledKey = "phoneSpeechEnabled"
+
     private let synthesizer = AVSpeechSynthesizer()
     private var cancellables = Set<AnyCancellable>()
 
@@ -46,7 +50,7 @@ final class SpeechManager: ObservableObject {
         hogMs: Double?,
         settings: ServerSettings
     ) {
-        guard settings.speech_enabled else { return }
+        guard UserDefaults.standard.bool(forKey: Self.enabledKey) else { return }
 
         // "Ready to go" on armed transition
         if newState == .armed && lastState != .armed {

@@ -46,7 +46,21 @@ server:
   # Debug: log TTS spawns (optional)
   # tts_debug_log: "/var/log/stonetimer-tts-spawn.log"
 
-# Optional/advanced (currently not used by the code, kept for future):
-# max_history: 100
-# ws_ping_interval: 30
-# sensor_timeout_ms: 100
+  # Optional/advanced:
+  #
+  # Sensors (Pi Zero): each trigger is sent this many times in total, since a single
+  # UDP datagram can get lost on Wi-Fi. The server drops the duplicates.
+  # trigger_repeats: 3
+  # trigger_repeat_interval_ms: 20
+  # heartbeat_interval_s: 5
+  #
+  # Server (Pi 4):
+  # A sensor is shown as offline when nothing was heard from it for this long.
+  # sensor_timeout_s: 12
+  # A sensor is flagged (orange dot) when its clock appears to differ from the
+  # server's by more than this. Times involving that sensor are then unreliable.
+  # clock_skew_warn_ms: 25
+  # Number of measurements kept in the history.
+  # max_history: 100
+  # Where history.json and runtime_settings.json are stored (default: install dir).
+  # data_dir: "/opt/stonetimer"

@@ -1,6 +1,14 @@
 # Server requirements (Pi 4)
-# gpiozero och lgpio installeras via apt (python3-gpiozero, python3-lgpio)
-fastapi==0.109.0
-uvicorn==0.27.0
-websockets==12.0
-pyyaml==6.0.1
+# gpiozero and lgpio are installed via apt (python3-gpiozero, python3-lgpio)
+#
+# Current releases need Python 3.11+ (Raspberry Pi OS Bookworm or newer).
+# The older pins keep Bullseye (Python 3.9) installable.
+fastapi==0.162.4; python_version >= "3.11"
+uvicorn==0.54.0; python_version >= "3.11"
+websockets==17.4; python_version >= "3.11"
+pyyaml==6.0.3; python_version >= "3.11"
+
+fastapi==0.109.0; python_version < "3.11"
+uvicorn==0.27.0; python_version < "3.11"
+websockets==12.0; python_version < "3.11"
+pyyaml==6.0.1; python_version < "3.11"

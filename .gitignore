@@ -25,8 +25,13 @@ Thumbs.db
 # Logs
 *.log
 
-# Config (lokal konfiguration)
+# Local configuration and runtime data
 config.yaml
+runtime_settings.json
+history.json
+*.tmp
+.lgd-nfy*
+.pytest_cache/
 
 # Build
 *.egg-info/

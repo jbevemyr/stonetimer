@@ -57,7 +57,14 @@ public struct SensorInfo: Codable, Sendable, Identifiable {
     public let label: String
     public let status: String
     public let last_seen_s_ago: Double?
+    /// false when the sensor's clock is out of sync with the server (times unreliable).
+    public let clock_ok: Bool?
     public var id: String { device_id }
+}
+
+/// Envelope returned by GET /api/sensors
+public struct SensorsResponse: Codable, Sendable {
+    public let sensors: [SensorInfo]
 }
 
 public struct TimesRecord: Codable, Sendable, Identifiable {

@@ -119,6 +119,8 @@
         .sensor-dot.online { background: #34c759; }
         .sensor-dot.offline { background: #ff3b30; }
         .sensor-dot.local { background: #86868b; }
+        /* Online, but its clock is out of sync with the server: times are unreliable. */
+        .sensor-dot.online.clock-warn { background: #ff9500; }
 
         /* Main row */
         .main-row {
@@ -649,9 +651,21 @@
             <div class="setting-group">
                 <label>
                     <input type="checkbox" id="speech-enabled">
-                    Enable voice announcements
+                    Voice on the timer's speaker
                 </label>
-                
+                <label>
+                    <input type="checkbox" id="browser-speech-enabled">
+                    Voice on this device
+                </label>
+                <div class="setting-subgroup" id="browser-speech-options">
+                    <button class="btn-secondary" id="btn-unlock-speech" type="button" onclick="unlockSpeech({ announce: true })">
+                        Activate audio (mobile)
+                    </button>
+                    <div class="setting-note">
+                        Only affects this phone/browser, e.g. for headphones. iPhone/iPad often require one tap before speech works. Tap this once after enabling voice.
+                    </div>
+                </div>
+
                 <div class="setting-subgroup" id="speech-options">
                     <label>
                         <input type="checkbox" id="speak-ready">
@@ -665,12 +679,6 @@
                         <input type="checkbox" id="speak-hog-hog">
                         Announce Hog-Hog time
                     </label>
-                    <button class="btn-secondary" id="btn-unlock-speech" type="button" onclick="unlockSpeech({ announce: true })">
-                        Activate audio (mobile)
-                    </button>
-                    <div class="setting-note">
-                        iPhone/iPad often require one tap before speech works. Tap this once after enabling voice.
-                    </div>
                 </div>
             </div>
 
@@ -703,6 +711,28 @@
             tee_to_hog_close_ms: null,
             hog_to_hog_ms: null
         };
+        // Don't announce whatever is on screen when the page loads.
+        let firstStateSeen = false;
+
+        // Server settings (shared by everyone), kept current over the WebSocket.
+        let serverSettings = {
+            speech_enabled: false,
+            speak_ready: true,
+            speak_tee_hog: true,
+            speak_hog_hog: false,
+            auto_rearm_enabled: false,
+            auto_rearm_after_s: 120
+        };
+
+        // Voice in this browser is a per-device choice, so it lives in localStorage
+        // rather than in the server settings (which control the timer's own speaker).
+        const BROWSER_SPEECH_KEY = 'stonetimer.browserSpeech';
+        function browserSpeechEnabled() {
+            try { return window.localStorage.getItem(BROWSER_SPEECH_KEY) === '1'; } catch (_) { return false; }
+        }
+        function setBrowserSpeechEnabled(enabled) {
+            try { window.localStorage.setItem(BROWSER_SPEECH_KEY, enabled ? '1' : '0'); } catch (_) {}
+        }
 
         // Browser speech (phone headphones use-case)
         let speechQueue = Promise.resolve();
@@ -721,8 +751,7 @@
         }
 
         function shouldSpeakEnabled() {
-            const el = document.getElementById('speech-enabled');
-            return !!(el && el.checked);
+            return browserSpeechEnabled();
         }
 
         function say(text, { interrupt = false } = {}) {
@@ -805,6 +834,9 @@
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 if (message.type === 'state_update') updateState(message.data);
+                else if (message.type === 'history') renderHistory(message.data);
+                else if (message.type === 'sensors') updateSensors(message.data);
+                else if (message.type === 'settings') applySettings(message.data);
             };
             ws.onclose = () => {
                 console.log('WebSocket closed, reconnecting...');
@@ -841,12 +873,12 @@
 
             // --- Voice announcements (only on transitions / first-availability) ---
             // Armed
-            const speechEnabled = shouldSpeakEnabled();
+            const speechEnabled = shouldSpeakEnabled() && firstStateSeen;
+            firstStateSeen = true;
             if (speechEnabled) {
                 // "armed" state transition
                 if (currentState === 'armed' && prevState !== 'armed') {
-                    const speakReady = document.getElementById('speak-ready')?.checked;
-                    if (speakReady) {
+                    if (serverSettings.speak_ready) {
                         say('ready to go', { interrupt: true });
                     }
                     // reset per-run announcements for the new session
@@ -857,8 +889,7 @@
                 // Tee-Hog (announce once when it first appears)
                 const teeMs = (session.tee_to_hog_close_ms != null && session.tee_to_hog_close_ms > 0) ? Number(session.tee_to_hog_close_ms) : null;
                 if ((lastSeen.tee_to_hog_close_ms == null || lastSeen.tee_to_hog_close_ms <= 0) && teeMs != null) {
-                    const speakTee = document.getElementById('speak-tee-hog')?.checked;
-                    if (speakTee) {
+                    if (serverSettings.speak_tee_hog) {
                         const phrase = formatSecondsLikeBase(teeMs / 1000);
                         if (phrase) say(phrase);
                     }
@@ -867,8 +898,7 @@
                 // Hog-Hog (announce once when it first appears)
                 const hogMs = (session.hog_to_hog_ms != null && session.hog_to_hog_ms > 0) ? Number(session.hog_to_hog_ms) : null;
                 if ((lastSeen.hog_to_hog_ms == null || lastSeen.hog_to_hog_ms <= 0) && hogMs != null) {
-                    const speakHog = document.getElementById('speak-hog-hog')?.checked;
-                    if (speakHog) {
+                    if (serverSettings.speak_hog_hog) {
                         const phrase = formatSecondsLikeBase(hogMs / 1000);
                         if (phrase) say(phrase);
                     }
@@ -881,28 +911,35 @@
             lastSeen.hog_to_hog_ms = session.hog_to_hog_ms;
         }
 
+        const HISTORY_ROWS = 15;
+
+        // The server pushes the history over the WebSocket whenever it changes.
+        function renderHistory(data) {
+            if (!Array.isArray(data)) return;
+            const tbody = document.getElementById('history-body');
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="empty-history">No measurements yet</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.slice(0, HISTORY_ROWS).map(record => {
+                const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
+                const teeHog = (record.tee_to_hog_close_ms != null && record.tee_to_hog_close_ms > 0)
+                    ? (record.tee_to_hog_close_ms / 1000).toFixed(2) : '--';
+                const hogHog = (record.hog_to_hog_ms != null && record.hog_to_hog_ms > 0)
+                    ? (record.hog_to_hog_ms / 1000).toFixed(2) : '--';
+                return `<tr>
+                    <td class="time-col">${time}</td>
+                    <td class="tee-hog-col">${teeHog}</td>
+                    <td class="hog-hog-col">${hogHog}</td>
+                </tr>`;
+            }).join('');
+        }
+
         function loadHistory() {
-            fetch('/api/times?limit=15')
+            fetch(`/api/times?limit=${HISTORY_ROWS}`)
                 .then(r => r.json())
-                .then(data => {
-                    const tbody = document.getElementById('history-body');
-                    if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="3" class="empty-history">No measurements yet</td></tr>';
-                        return;
-                    }
-                    tbody.innerHTML = data.map(record => {
-                        const time = record.timestamp ? new Date(record.timestamp).toLocaleTimeString('sv-SE') : '--';
-                        const teeHog = (record.tee_to_hog_close_ms != null && record.tee_to_hog_close_ms > 0)
-                            ? (record.tee_to_hog_close_ms / 1000).toFixed(2) : '--';
-                        const hogHog = (record.hog_to_hog_ms != null && record.hog_to_hog_ms > 0)
-                            ? (record.hog_to_hog_ms / 1000).toFixed(2) : '--';
-                        return `<tr>
-                            <td class="time-col">${time}</td>
-                            <td class="tee-hog-col">${teeHog}</td>
-                            <td class="hog-hog-col">${hogHog}</td>
-                        </tr>`;
-                    }).join('');
-                });
+                .then(renderHistory)
+                .catch(() => {});
         }
 
         async function armSystem() {
@@ -985,11 +1022,11 @@
         document.addEventListener('mouseup', endDrag);
         document.addEventListener('touchend', endDrag);
 
-        setInterval(loadHistory, 3000);
         function loadStatus() {
             fetch('/api/status')
                 .then(r => r.json())
-                .then(data => updateState(data));
+                .then(data => updateState(data))
+                .catch(() => {});
         }
 
         function updateSensors(data) {
@@ -997,10 +1034,15 @@
             for (const s of data.sensors) {
                 const el = document.getElementById(`sensor-${s.device_id}`);
                 if (!el) continue;
-                el.className = 'sensor-dot ' + (s.status || 'offline');
-                const age = (s.last_seen_s_ago != null) ? `${s.last_seen_s_ago}s` : '—';
-                const src = s.source ? ` (${s.source})` : '';
-                el.title = `${s.label}: ${s.status}${src}, senast: ${age}`;
+                const clockWarn = s.clock_ok === false;
+                el.className = 'sensor-dot ' + (s.status || 'offline') + (clockWarn ? ' clock-warn' : '');
+                let title = `${s.label}: ${s.status}`;
+                if (s.clock_offset_ms != null) {
+                    title += clockWarn
+                        ? `, clock off by ${s.clock_offset_ms} ms (times unreliable)`
+                        : `, clock offset ${s.clock_offset_ms} ms`;
+                }
+                el.title = title;
             }
         }
 
@@ -1013,7 +1055,8 @@
 
         // Settings
         function openSettings() {
-            loadSettings();
+            fillSettingsForm();
+            loadSettings().then(fillSettingsForm);
             document.getElementById('settings-modal').classList.add('open');
         }
 
@@ -1022,41 +1065,63 @@
             document.getElementById('settings-modal').classList.remove('open');
         }
 
+        function applySettings(data) {
+            if (!data || typeof data !== 'object') return;
+            serverSettings = { ...serverSettings, ...data };
+        }
+
         function loadSettings() {
-            fetch('/api/settings')
+            return fetch('/api/settings')
                 .then(r => r.json())
-                .then(data => {
-                    document.getElementById('speech-enabled').checked = data.speech_enabled;
-                    document.getElementById('speak-ready').checked = data.speak_ready;
-                    document.getElementById('speak-tee-hog').checked = data.speak_tee_hog;
-                    document.getElementById('speak-hog-hog').checked = data.speak_hog_hog;
-                    document.getElementById('auto-rearm-enabled').checked = !!data.auto_rearm_enabled;
-                    const afterS = Number(data.auto_rearm_after_s);
-                    if (Number.isFinite(afterS) && afterS >= 0) {
-                        document.getElementById('auto-rearm-minutes').value = String(afterS / 60);
-                    } else {
-                        document.getElementById('auto-rearm-minutes').value = '2';
-                    }
-                    updateSpeechOptions();
-                    updateAutoRearmOptions();
-                });
+                .then(applySettings)
+                .catch(() => {});
+        }
+
+        function fillSettingsForm() {
+            const data = serverSettings;
+            document.getElementById('speech-enabled').checked = !!data.speech_enabled;
+            document.getElementById('browser-speech-enabled').checked = browserSpeechEnabled();
+            document.getElementById('speak-ready').checked = !!data.speak_ready;
+            document.getElementById('speak-tee-hog').checked = !!data.speak_tee_hog;
+            document.getElementById('speak-hog-hog').checked = !!data.speak_hog_hog;
+            document.getElementById('auto-rearm-enabled').checked = !!data.auto_rearm_enabled;
+            const afterS = Number(data.auto_rearm_after_s);
+            if (Number.isFinite(afterS) && afterS >= 0) {
+                document.getElementById('auto-rearm-minutes').value = String(afterS / 60);
+            } else {
+                document.getElementById('auto-rearm-minutes').value = '2';
+            }
+            updateSpeechOptions();
+            updateAutoRearmOptions();
         }
 
         function updateSpeechOptions() {
-            const enabled = document.getElementById('speech-enabled').checked;
-            document.getElementById('speech-options').style.opacity = enabled ? '1' : '0.4';
-            document.getElementById('speak-ready').disabled = !enabled;
-            document.getElementById('speak-tee-hog').disabled = !enabled;
-            document.getElementById('speak-hog-hog').disabled = !enabled;
+            const speaker = document.getElementById('speech-enabled').checked;
+            const browser = document.getElementById('browser-speech-enabled').checked;
+            // What gets announced applies to both the speaker and this device.
+            const any = speaker || browser;
+            document.getElementById('speech-options').style.opacity = any ? '1' : '0.4';
+            document.getElementById('speak-ready').disabled = !any;
+            document.getElementById('speak-tee-hog').disabled = !any;
+            document.getElementById('speak-hog-hog').disabled = !any;
+            document.getElementById('browser-speech-options').style.opacity = browser ? '1' : '0.4';
             const unlockBtn = document.getElementById('btn-unlock-speech');
-            if (unlockBtn) unlockBtn.disabled = !enabled;
+            if (unlockBtn) unlockBtn.disabled = !browser;
         }
 
-        document.getElementById('speech-enabled').addEventListener('change', () => {
+        document.getElementById('speech-enabled').addEventListener('change', updateSpeechOptions);
+
+        document.getElementById('browser-speech-enabled').addEventListener('change', () => {
+            // Takes effect immediately: the "Activate audio" button needs it on,
+            // and enabling it inside a tap is what unlocks speech on most browsers.
+            const enabled = document.getElementById('browser-speech-enabled').checked;
+            setBrowserSpeechEnabled(enabled);
             updateSpeechOptions();
-            if (document.getElementById('speech-enabled').checked) {
+            if (enabled) {
                 // Often enough on desktop; on iOS user may still need "Activate audio" button.
                 unlockSpeech({ announce: false });
+            } else if (speechSupported()) {
+                try { window.speechSynthesis.cancel(); } catch (_) {}
             }
         });
 
@@ -1081,19 +1146,29 @@
                 auto_rearm_enabled: document.getElementById('auto-rearm-enabled').checked,
                 auto_rearm_after_s: Math.max(0, Math.min(afterS, 30 * 60))
             };
-            await fetch('/api/settings', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(settings)
-            });
+            applySettings(settings);
+            try {
+                await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+            } catch (_) {
+                alert('Could not save settings (no connection to the timer).');
+                loadSettings();
+                return;
+            }
             closeSettings();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // The WebSocket delivers state, history, sensors and settings on connect
+            // and on every change. These one-off fetches just fill the page sooner.
             loadStatus();
-            connectWebSocket();
             loadHistory();
             loadSensors();
+            loadSettings();
+            connectWebSocket();
             // Some browsers (notably Safari) populate voices asynchronously.
             if (speechSupported()) {
                 try {
@@ -1101,8 +1176,6 @@
                 } catch (_) {}
             }
         });
-
-        setInterval(loadSensors, 2000);
     </script>
 </body>
 </html>

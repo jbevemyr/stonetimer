@@ -1,3 +1,4 @@
 # Sensor requirements (Pi Zero 2 W)
-# gpiozero och lgpio installeras via apt (python3-gpiozero, python3-lgpio)
-pyyaml==6.0.1
+# gpiozero and lgpio are installed via apt (python3-gpiozero, python3-lgpio)
+pyyaml==6.0.3; python_version >= "3.11"
+pyyaml==6.0.1; python_version < "3.11"

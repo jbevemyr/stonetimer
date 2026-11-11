@@ -12,6 +12,8 @@ struct SettingsView: View {
 
     @State private var draft: ServerSettings = .defaultSettings
     @State private var autoRearmMinutes: Double = 2
+    // Stored on this iPhone only; does not touch the server's speaker setting.
+    @AppStorage(SpeechManager.enabledKey) private var phoneSpeechEnabled = false
 
     var body: some View {
         NavigationStack {
@@ -39,11 +41,15 @@ struct SettingsView: View {
 
                 // MARK: iPhone Voice
                 Section {
-                    Toggle(isOn: $draft.speech_enabled) {
+                    Toggle(isOn: $phoneSpeechEnabled) {
                         Label("Read times on iPhone", systemImage: "iphone.radiowaves.left.and.right")
                     }
 
-                    if draft.speech_enabled {
+                    Toggle(isOn: $draft.speech_enabled) {
+                        Label("Read times on timer speaker", systemImage: "speaker.wave.2")
+                    }
+
+                    if phoneSpeechEnabled || draft.speech_enabled {
                         Toggle(isOn: $draft.speak_ready) {
                             Text("Say ready to go when armed")
                         }
@@ -60,9 +66,9 @@ struct SettingsView: View {
                         .padding(.leading, 8)
                     }
                 } header: {
-                    Text("iPhone Voice")
+                    Text("Voice")
                 } footer: {
-                    Text("Reads times aloud on this iPhone. Works in headphones or speaker.")
+                    Text("The iPhone switch only affects this phone (headphones or speaker). The timer speaker and what gets announced are shared by everyone.")
                 }
 
                 // MARK: Auto-rearm

@@ -50,6 +50,8 @@ public final class RockTimerClient: ObservableObject {
         }
         Task { await fetchHistory() }
         Task { await fetchSensors() }
+        // Needed up front: which announcements to speak comes from the server settings.
+        Task { await fetchSettings() }
         startHistoryPolling()
     }
 
@@ -126,7 +128,10 @@ public final class RockTimerClient: ObservableObject {
     private func startHistoryPolling() {
         Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             guard let self else { return }
-            Task { await self.fetchHistory() }
+            Task {
+                await self.fetchHistory()
+                await self.fetchSensors()
+            }
         }
     }
 
@@ -167,8 +172,8 @@ public final class RockTimerClient: ObservableObject {
         guard let url = URL(string: "\(_serverBase)/api/sensors") else { return }
         do {
             let (data, _) = try await URLSession.shared.data(for: request(url))
-            let sensors = try JSONDecoder().decode([SensorInfo].self, from: data)
-            state.sensors = sensors
+            let response = try JSONDecoder().decode(SensorsResponse.self, from: data)
+            state.sensors = response.sensors
         } catch {}
     }
 

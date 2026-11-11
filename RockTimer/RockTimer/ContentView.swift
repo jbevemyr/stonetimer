@@ -185,10 +185,22 @@ struct SensorDots: View {
         HStack(spacing: 6) {
             ForEach(state.sensors) { sensor in
                 Circle()
-                    .fill(sensor.status == "online" ? Color.green : Color.red)
+                    .fill(color(for: sensor))
                     .frame(width: 10, height: 10)
                     .help(sensor.label)
             }
+        }
+    }
+
+    private func color(for sensor: SensorInfo) -> Color {
+        switch sensor.status {
+        case "online":
+            // Orange: online, but its clock is out of sync so times are unreliable
+            return sensor.clock_ok == false ? .orange : .green
+        case "local":
+            return .gray
+        default:
+            return .red
         }
     }
 }

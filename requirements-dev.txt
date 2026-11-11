@@ -1,0 +1,4 @@
+# Development / test requirements (run: pytest)
+-r requirements-server.txt
+pytest
+httpx

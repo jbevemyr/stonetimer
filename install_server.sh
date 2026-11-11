@@ -48,7 +48,12 @@ if [ "${SCRIPT_DIR}" != "${INSTALL_DIR}" ]; then
         --exclude='./__pycache__' \
         --exclude='./.pytest_cache' \
         --exclude='./config.yaml' \
+        --exclude='./runtime_settings.json' \
+        --exclude='./history.json' \
+        --exclude='./.git' \
         -cf - -C "${SCRIPT_DIR}" . | tar -xpf - -C "${INSTALL_DIR}"
+    # Removed from the project; don't leave a stale copy behind on upgrades.
+    rm -f "${INSTALL_DIR}/server/static/index-mockup.html"
 else
     echo "NOTE: Running from ${INSTALL_DIR}; skipping copy step."
 fi
@@ -439,7 +444,39 @@ fi
 
 echo "[5/5] Installing systemd services..."
 
-# Server service (runs as root for GPIO access)
+# The server runs as the installing user rather than root. GPIO and audio access
+# come from the gpio/audio groups. Set STONETIMER_RUN_AS_ROOT=1 to keep running
+# it as root (the previous behaviour), e.g. if audio or GPIO stop working.
+SERVICE_USER="${USER}"
+SERVICE_GROUPS=""
+if [ "${STONETIMER_RUN_AS_ROOT:-0}" = "1" ] || [ "${USER}" = "root" ]; then
+    SERVICE_USER="root"
+elif ! getent group gpio >/dev/null; then
+    echo "NOTE: no 'gpio' group on this system; running the server as root."
+    SERVICE_USER="root"
+else
+    SERVICE_GROUPS="gpio"
+    if getent group audio >/dev/null; then
+        SERVICE_GROUPS="${SERVICE_GROUPS} audio"
+    fi
+fi
+echo "Server will run as: ${SERVICE_USER}"
+
+if [ "${SERVICE_USER}" != "root" ]; then
+    # ${INSTALL_DIR} (history.json, runtime_settings.json) is already owned by this user.
+    # speak.sh and the server append to these logs; speak.sh also uses the Piper cache.
+    for f in /var/log/stonetimer-tts.log /var/log/stonetimer-tts-spawn.log; do
+        touch "${f}"
+        chown "${SERVICE_USER}:${SERVICE_USER}" "${f}"
+    done
+    chown -R "${SERVICE_USER}:${SERVICE_USER}" "${PIPER_DIR}/cache" 2>/dev/null || true
+fi
+
+SERVICE_GROUPS_LINE=""
+if [ -n "${SERVICE_GROUPS}" ]; then
+    SERVICE_GROUPS_LINE="SupplementaryGroups=${SERVICE_GROUPS}"
+fi
+
 cat > /etc/systemd/system/stonetimer-server.service << EOF
 [Unit]
 Description=StoneTimer Central Server
@@ -447,7 +484,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=root
+User=${SERVICE_USER}
+${SERVICE_GROUPS_LINE}
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin"
 Environment="STONETIMER_TTS_FAST=1"

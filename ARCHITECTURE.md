@@ -134,7 +134,9 @@ This document describes the technical architecture of Stone Timer.
 - Vanilla JavaScript (no framework)
 - CSS Grid/Flexbox layout
 - WebSocket API
-- Fetch API for HTTP requests
+- Fetch API for HTTP requests (commands and initial load; updates arrive over the WebSocket)
+- Web Speech API for optional voice on the viewing device (a per-device switch
+  stored in `localStorage`, separate from the timer speaker setting)
 
 ## Data Flow
 
@@ -259,9 +261,30 @@ chronyc sources -v  # View time sources
 - Reliable enough on local Wi-Fi (<1% packet loss)
 
 **Packet loss handling:**
-- Each trigger is independent
-- If a tee trigger is lost, the stone simply won't be measured
-- User can visually confirm triggers (laser beam break = immediate)
+- Sensors send each trigger three times, 20 ms apart (`trigger_repeats`,
+  `trigger_repeat_interval_ms`), with identical payloads
+- The server drops duplicates by `(device_id, timestamp_ns)`
+- If all copies of a tee trigger are lost, the stone simply won't be measured
+
+### UDP Heartbeat Message
+
+Sensors send a heartbeat every 5 s (`heartbeat_interval_s`):
+```json
+{
+  "type": "heartbeat",
+  "device_id": "tee",
+  "timestamp_ns": 1703265432123456789
+}
+```
+
+The server uses it for two things:
+- **Liveness:** a sensor not heard from for `sensor_timeout_s` is shown as offline
+- **Clock check:** receive time minus `timestamp_ns` is the clock offset plus the
+  network delay. The smallest of the last six samples is used as the estimate; if it
+  exceeds `clock_skew_warn_ms` (default 25 ms) the sensor's dot turns orange and a
+  warning is logged. This catches a sensor that never synced or whose clock was
+  stepped. It cannot see offsets smaller than the network delay, so `chronyc tracking`
+  is still the tool for checking fine sync.
 
 ### WebSocket State Updates
 
@@ -283,11 +306,14 @@ chronyc sources -v  # View time sources
       "has_hog_close": true,
       "has_hog_far": true,
       "started_at": "2024-12-22T15:30:32.123456"
-    },
-    "sensors": {}
+    }
   }
 }
 ```
+
+The server also pushes `history`, `sensors` and `settings` messages (same payloads
+as the corresponding `GET /api/...` endpoints) on connect and whenever they change,
+so clients don't need to poll.
 
 **Client → Server commands:**
 ```json
@@ -300,7 +326,8 @@ chronyc sources -v  # View time sources
 ```
 stonetimer/
 ├── server/
-│   ├── main.py              # FastAPI server (Pi 4)
+│   ├── main.py              # FastAPI server (Pi 4): UDP, GPIO, API, TTS, persistence
+│   ├── timing.py            # Timing state machine (pure logic, no I/O)
 │   └── static/
 │       └── index.html       # Web UI
 ├── sensor/
@@ -318,12 +345,14 @@ stonetimer/
 ├── tools/
 │   ├── simulate_triggers.py # UDP trigger simulator
 │   └── test_sensor.py       # GPIO sensor test
+├── tests/                   # pytest suite (state machine + server)
 ├── StoneTimer/               # iOS + Apple Watch companion (Xcode)
 ├── install_server.sh        # Pi 4 installer
 ├── install_sensor.sh        # Pi Zero installer
 ├── config.yaml.example      # Configuration template
 ├── requirements-server.txt  # Python deps (Pi 4)
 ├── requirements-sensor.txt  # Python deps (Pi Zero)
+├── requirements-dev.txt     # Test deps
 ├── README.md                # Main documentation
 ├── QUICKSTART.md            # Getting started guide
 └── ARCHITECTURE.md          # This file
@@ -335,7 +364,9 @@ stonetimer/
 
 **`/etc/systemd/system/stonetimer-server.service`**
 - Runs: `/opt/stonetimer/venv/bin/python /opt/stonetimer/server/main.py`
-- User: root (required for GPIO)
+- User: the user who ran the installer, with supplementary groups `gpio` and `audio`
+  (root if `STONETIMER_RUN_AS_ROOT=1` was set or the system has no `gpio` group)
+- Writes: `/opt/stonetimer/history.json`, `/opt/stonetimer/runtime_settings.json`
 - Restart: always
 - Logs: `journalctl -u stonetimer-server`
 
@@ -349,7 +380,8 @@ stonetimer/
 
 **`/etc/systemd/system/stonetimer-sensor.service`**
 - Runs: `/opt/stonetimer/venv/bin/python /opt/stonetimer/sensor/sensor_daemon.py`
-- User: root (required for GPIO)
+- User: the user who ran the installer, with supplementary group `gpio`
+  (root under the same conditions as the server)
 - Restart: always
 - Logs: `journalctl -u stonetimer-sensor`
 
@@ -456,9 +488,8 @@ makestep 1.0 3
 
 ### GPIO Access
 
-- **Requires root** (both server and sensors run as root)
-- **Risk:** Code execution = full system access
-- **Mitigation:** Read-only root filesystem (optional)
+- Server and sensors run as a regular user; GPIO access comes from the `gpio` group
+- Installing with `STONETIMER_RUN_AS_ROOT=1` runs them as root instead
 
 ## Extensibility
 
@@ -472,11 +503,15 @@ Replace touchscreen with:
 
 ### Unit Tests
 
-**TODO:** Add pytest tests for:
-- State machine transitions
-- Time calculations
-- UDP message parsing
-- WebSocket protocol
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+- `tests/test_timing.py`: state machine transitions, trigger ordering, duplicates,
+  late hog_far, history
+- `tests/test_server.py`: HTTP API, settings, persistence, UDP message parsing,
+  clock check, WebSocket pushes, auto-rearm
 
 ### Integration Tests
 

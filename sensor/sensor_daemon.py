@@ -10,6 +10,7 @@ import time
 import json
 import yaml
 import logging
+import queue
 import signal
 import sys
 import threading
@@ -46,8 +47,10 @@ class SensorDaemon:
     Responsibilities:
     - Monitor GPIO pin for laser trip sensor (LM393)
     - Capture high-precision timestamp (nanoseconds) on trigger
-    - Send trigger event to server via UDP
-    - Best-effort sending over UDP (no connection state to maintain)
+    - Send trigger event to server via UDP, repeated a few times since a
+      single datagram can get lost on Wi-Fi (the server drops duplicates)
+    - Send periodic heartbeats so the server can show liveness and check
+      that this unit's clock is in sync
     
     The sensor runs continuously and sends triggers regardless of server state.
     The server decides whether to act on incoming triggers based on its state.
@@ -70,6 +73,14 @@ class SensorDaemon:
         # Heartbeat interval (seconds). Allows the server UI to show which sensors are alive.
         self.heartbeat_interval_s = float(self.config.get('server', {}).get('heartbeat_interval_s', 5.0))
         
+        # Each trigger is sent trigger_repeats times in total, spaced by
+        # trigger_repeat_interval_ms. The first one is sent immediately.
+        server_cfg = self.config.get('server', {})
+        self.trigger_repeats = max(1, int(server_cfg.get('trigger_repeats', 3)))
+        self.trigger_repeat_interval_s = max(0.0, float(server_cfg.get('trigger_repeat_interval_ms', 20))) / 1000.0
+        self._resend_queue: queue.Queue = queue.Queue()
+        self._resend_thread: Optional[threading.Thread] = None
+
         logger.info(f"Sensor: {self.device_id}")
         logger.info(f"Server: {self.server_address}")
         logger.info(f"Heartbeat interval: {self.heartbeat_interval_s:.1f}s")
@@ -119,11 +130,31 @@ class SensorDaemon:
             'timestamp_ns': trigger_time
         }
         
+        data = json.dumps(payload).encode('utf-8')
+        self._send(data)
+        if self.trigger_repeats > 1:
+            self._resend_queue.put(data)
+
+    def _send(self, data: bytes) -> None:
         try:
-            data = json.dumps(payload).encode('utf-8')
             self.udp_socket.sendto(data, self.server_address)
         except Exception as e:
             logger.error(f"Could not send UDP: {e}")
+
+    def _resend_loop(self):
+        """Resend triggers off the GPIO callback thread.
+
+        The payload (including its timestamp) is identical each time, so the
+        server recognises the copies as the same trigger.
+        """
+        while self.running:
+            try:
+                data = self._resend_queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
+            for _ in range(self.trigger_repeats - 1):
+                time.sleep(self.trigger_repeat_interval_s)
+                self._send(data)
 
     def _send_heartbeat(self):
         """Send periodic heartbeats to the server."""
@@ -150,7 +181,7 @@ class SensorDaemon:
         logger.info("Shutting down...")
         self.running = False
         self.udp_socket.close()
-        # gpiozero hanterar cleanup automatiskt
+        # gpiozero cleans up after itself
         sys.exit(0)
     
     def run(self):
@@ -166,6 +197,9 @@ class SensorDaemon:
         self._heartbeat_thread = threading.Thread(target=self._send_heartbeat, daemon=True)
         self._heartbeat_thread.start()
         
+        self._resend_thread = threading.Thread(target=self._resend_loop, daemon=True)
+        self._resend_thread.start()
+
         # Keep the process alive
         while self.running:
             time.sleep(1)
